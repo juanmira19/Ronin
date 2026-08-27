@@ -43,23 +43,31 @@ Recibe la serie temporal de una sesión (frecuencia cardíaca y velocidad con ma
 
 ## Estado
 
-Fase de diseño. Definidos: tesis de problema, flujo, contrato de salida. Pendiente: procesamiento sobre datos reales y validación con jugadores.
+Tesis de problema, flujo y contrato de salida definidos. La capa determinística
+(segmentación, métricas, validación) y la capa de interpretación con IA ya están
+implementadas en `src/` y pasan los 5 casos de `evals/`. Pendiente: correr todo
+esto contra una sesión real de Apple Watch — hoy corre sobre datos sintéticos.
 
-## Estructura propuesta
+## Estructura actual
 
 ```
 ronin/
-├── docs/            # tesis de problema, decisiones de diseño, contrato del output
 ├── data/            # datos de sesiones — NO se versiona (ver .gitignore)
+│   ├── raw/         # exports crudos de Health Auto Export (JSON, v2)
 │   └── samples/     # ejemplos anonimizados para pruebas
 ├── src/
-│   ├── ingest/      # lectura y validación de exportaciones del reloj
+│   ├── common/      # constantes, contrato de producto, cliente del modelo (Groq)
+│   ├── ingest/      # generación de sesión sintética; lectura de exports reales (pendiente)
 │   ├── segment/     # detección de bloques de esfuerzo (determinístico)
 │   ├── metrics/     # degradación, recuperación, comparación con historial
 │   ├── interpret/   # capa de IA: prompt, parsing y validación del JSON
 │   └── verify/      # verificación de cifras y reglas de seguridad
+├── evals/           # eval_cases.json + run_evals.py, corre contra src/
 └── tests/
 ```
+
+Instalar dependencias con `pip install -r requirements.txt`. Correr los evals con
+`GROQ_API_KEY=... python -m evals.run_evals` desde la raíz del repo.
 
 ## Privacidad
 
