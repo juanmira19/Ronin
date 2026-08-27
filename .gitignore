@@ -1,0 +1,15 @@
+# Secrets — nunca se versionan, ni en repos privados
+APIKEYGROQ.md
+.env
+*.env
+
+# Datos de sesiones reales — ver README (Privacidad)
+data/raw/
+
+# Exports de Health Auto Export sueltos en la raiz
+HealthAutoExport-*.json
+HealthAutoExport-*.csv
+*.gpx
+
+__pycache__/
+*.pyc
