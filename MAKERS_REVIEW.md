@@ -36,3 +36,45 @@ Ronin no debe depender de que el modelo "suene inteligente". Si el producto prom
 1. Core: subir un CSV anonimo minimo con timestamp, frecuencia cardiaca y velocidad.
 2. Intermediate: crear una funcion `detect_effort_blocks(sample)` que no use IA.
 3. Advanced: agregar un validador que compare las cifras del texto generado por IA contra las metricas calculadas.
+
+<!-- MAKERS_REVIEW_2026_08_27_START -->
+## Revision docente - 2026-08-27
+
+### Lo que vimos
+
+- Andres Jacobo hizo un salto fuerte: extrajo capa deterministica a src/, agrego demo, requirements, datos sample, eval runner y tests.
+- Juan Pablo Mira ya tiene rama, pero el aporte individual debe quedar mas claro y diferenciado.
+- El proyecto tiene buena tesis: analizar sesiones deportivas con estructura, metricas y validacion.
+- El baseline actual pasa 5/5, pero corre sobre datos sinteticos.
+- El siguiente salto es probar con datos reales anonimizados o al menos muestras mas parecidas al mundo real.
+
+### Reto de hoy
+
+Pasen de sintetico a evidencia mas realista:
+
+1. Agregar un sample anonimizado o semi-realista en data/samples/.
+2. Correr los mismos evals contra ese sample.
+3. Documentar si el score cambia y que hipotesis aparece.
+
+### Tarea obligatoria: diagrama de arquitectura
+
+Crear docs/arquitectura.md con un diagrama Mermaid que muestre:
+
+`mermaid
+flowchart LR
+  DatosSesion --> Ingesta
+  Ingesta --> Anonimizacion
+  Anonimizacion --> Segmentacion
+  Segmentacion --> Metricas
+  Metricas --> InterpretacionLLM
+  InterpretacionLLM --> Verificacion
+  Evals --> Verificacion
+`
+
+El diagrama debe mostrar claramente que es deterministico, que usa LLM y donde se verifica.
+
+### Criterio de aceptacion
+
+Crear estructura es buen avance, pero ahora necesitamos evidencia con datos que se parezcan al producto real.
+<!-- MAKERS_REVIEW_2026_08_27_END -->
+
