@@ -78,3 +78,29 @@ El diagrama debe mostrar claramente que es deterministico, que usa LLM y donde s
 Crear estructura es buen avance, pero ahora necesitamos evidencia con datos que se parezcan al producto real.
 <!-- MAKERS_REVIEW_2026_08_27_END -->
 
+
+<!-- MAKERS_CODE_ARCH_REVIEW_2026_09_01_START -->
+## Revision de codigo y arquitectura - 2026-09-01
+
+### Lectura docente
+
+- Andres Jacobo hizo uno de los avances tecnicos mas fuertes: src/, evals, tests, demo, requirements y sample.
+- Juan Pablo Mira aparece con merge, pero su aporte individual tecnico sigue poco claro.
+- No se detecto docs/arquitectura.md.
+- El baseline pasa, pero principalmente sobre datos sinteticos.
+
+### Revision de principios
+
+- Bien: separar ingesta, metricas, interpretacion y verificacion es buena direccion.
+- Falta: arquitectura explicita para que el equipo pueda explicar el sistema entero.
+- Falta: evidencia con datos mas cercanos al uso real.
+
+### Pendiente de equipo
+
+Crear docs/arquitectura.md y correr los evals contra un sample anonimizado o semi-realista.
+
+### Pendiente por poca evidencia individual
+
+Juan Pablo debe dejar commit propio: arquitectura, sample, eval adicional o mejora de validacion.
+<!-- MAKERS_CODE_ARCH_REVIEW_2026_09_01_END -->
+
