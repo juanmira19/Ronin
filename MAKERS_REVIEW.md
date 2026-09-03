@@ -38,7 +38,6 @@ Ronin no debe depender de que el modelo "suene inteligente". Si el producto prom
 3. Advanced: agregar un validador que compare las cifras del texto generado por IA contra las metricas calculadas.
 
 <!-- MAKERS_REVIEW_2026_08_27_START -->
-
 ## Revision docente - 2026-08-27
 
 ### Lo que vimos
@@ -61,14 +60,22 @@ Pasen de sintetico a evidencia mas realista:
 
 Crear docs/arquitectura.md con un diagrama Mermaid que muestre:
 
-`mermaid flowchart LR   DatosSesion --> Ingesta   Ingesta --> Anonimizacion   Anonimizacion --> Segmentacion   Segmentacion --> Metricas   Metricas --> InterpretacionLLM   InterpretacionLLM --> Verificacion   Evals --> Verificacion `
+`mermaid
+flowchart LR
+  DatosSesion --> Ingesta
+  Ingesta --> Anonimizacion
+  Anonimizacion --> Segmentacion
+  Segmentacion --> Metricas
+  Metricas --> InterpretacionLLM
+  InterpretacionLLM --> Verificacion
+  Evals --> Verificacion
+`
 
 El diagrama debe mostrar claramente que es deterministico, que usa LLM y donde se verifica.
 
 ### Criterio de aceptacion
 
 Crear estructura es buen avance, pero ahora necesitamos evidencia con datos que se parezcan al producto real.
-
 <!-- MAKERS_REVIEW_2026_08_27_END -->
 
 <!-- MAKERS_CODE_ARCH_REVIEW_2026_09_01_START -->
