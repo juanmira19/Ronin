@@ -92,7 +92,6 @@ def generar_export_sintetico_partido(
     fc_fino = np.clip(fc_fino[:i] + rng.normal(0, 1.8, i), 60, fc_max)
     v_fino = np.clip(v_fino[:i] + rng.normal(0, 0.8, i), 0, None)
     t_fino = np.arange(i) * dt_fino
-    duracion_seg = int(t_fino[-1])
 
     # Sub-muestreo a intervalos irregulares, como un sensor real (no una malla
     # perfecta): FC cada ~2 s con jitter, velocidad GPS cada ~1 s con jitter.
@@ -104,11 +103,32 @@ def generar_export_sintetico_partido(
         muestras_t = np.array(muestras_t)
         return muestras_t, np.interp(muestras_t, t_fino, y_fino)
 
+    def _t_enteros_crecientes(ts):
+        """int(round(t)) puede repetir valor cuando el intervalo real (con
+        jitter) baja de 1s (le pasa a route_speed, intervalo 1.0 +- 0.3, o sea
+        hasta 0.7s de paso real). Un timestamp duplicado o no creciente rompe
+        la interpolacion de load_session (np.interp asume x estrictamente
+        creciente); se fuerza el siguiente entero disponible."""
+        out, last = [], -1
+        for t in ts:
+            ti = int(round(float(t)))
+            if ti <= last:
+                ti = last + 1
+            out.append(ti)
+            last = ti
+        return out
+
     hr_t, hr_v = _muestrear(t_fino, fc_fino, 2.0)
     sp_t, sp_v = _muestrear(t_fino, v_fino, 1.0)
+    hr_ti, sp_ti = _t_enteros_crecientes(hr_t), _t_enteros_crecientes(sp_t)
 
-    heart_rate = [{"t": int(round(t)), "bpm": round(float(v), 1)} for t, v in zip(hr_t, hr_v)]
-    route_speed = [{"t": int(round(t)), "speed_kmh": round(float(v), 2)} for t, v in zip(sp_t, sp_v)]
+    heart_rate = [{"t": t, "bpm": round(float(v), 1)} for t, v in zip(hr_ti, hr_v)]
+    route_speed = [{"t": t, "speed_kmh": round(float(v), 2)} for t, v in zip(sp_ti, sp_v)]
+
+    # Igual que anonymize.py con datos reales: la duracion es el maximo
+    # timestamp que de verdad quedo en las señales muestreadas, no el de la
+    # grilla fina interna.
+    duracion_seg = max(heart_rate[-1]["t"], route_speed[-1]["t"])
 
     return {
         "tipo_sesion": "Partido Ultimate (sintetico realista)",

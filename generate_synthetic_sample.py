@@ -15,6 +15,7 @@ OUT_PATH = Path("data/samples/partido_sintetico_2026-09-01.json")
 
 def main():
     export = generar_export_sintetico_partido()
+    OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUT_PATH.write_text(json.dumps(export, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"Escrito {OUT_PATH}: duracion_seg={export['duracion_seg']}, "
           f"{len(export['heart_rate'])} muestras FC, {len(export['route_speed'])} muestras velocidad")
