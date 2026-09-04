@@ -1,14 +1,22 @@
 SAMPLE_DT = 5  # segundos entre muestras de FC (Apple Watch en workout muestrea ~cada 5 s)
 
 # --- Velocidad -------------------------------------------------------------
-# Todos los umbrales de abajo son HIPOTESIS del equipo, no valores medidos en
-# campo. Se re-derivan cuando exista una sesion real de ultimate/futbol grabada
-# (ver TEAM_ROTATION.md: sigue siendo la dependencia bloqueante del proyecto).
+# Los umbrales de abajo son HIPOTESIS del equipo, no valores medidos en campo.
+# Se re-derivan cuando exista una sesion real de ultimate/futbol grabada (ver
+# TEAM_ROTATION.md: sigue siendo la dependencia bloqueante del proyecto).
 # Ninguno se ajusta para hacer pasar un eval.
+#
+# No hay umbral de sprint, a proposito. Uno absoluto (14 km/h) penalizaba al
+# jugador lento, y uno relativo a su propia velocidad maxima invierte el
+# resultado: correr es sostener velocidad alta, mientras que un partido es
+# estar parado con explosiones cortas. La intermitencia se mide con la forma
+# del esfuerzo (`numero_efectivo_bloques` en src/segment/blocks.py), que es
+# adimensional.
 
-UMBRAL_SPRINT_KMH = 14.0  # HIPOTESIS: separa 0.0% (corrida real) de 8.3% (partido sintetico)
-UMBRAL_MOVIMIENTO_KMH = 3.0  # HIPOTESIS: frontera entre caminar y trotar
-FRAC_SPRINT_MIN_INTERMITENTE = 0.02  # HIPOTESIS: >=2% del tiempo en sprint => patron intermitente
+UMBRAL_MOVIMIENTO_KMH = 3.0  # HIPOTESIS: frontera entre caminar y trotar. Unico
+                             # umbral absoluto de velocidad que queda, y solo se
+                             # usa para refinar limites de bloques.
+PERCENTIL_VELOZ = 90  # HIPOTESIS: "lo rapido" de una sesion, relativo a ella misma
 
 # HIPOTESIS: punto medio del rango 15-30 s de latencia de la FC que declara el
 # README. NO esta calibrado: el desfase de ~5 s que se mide por correlacion

@@ -79,6 +79,44 @@ def detectar_bloques(df, fc_max, umbral_pct=0.80, dur_min_seg=30, gap_max_seg=20
     return bloques
 
 
+def numero_efectivo_bloques(bloques) -> float:
+    """Inverso del indice de Herfindahl sobre las duraciones: `(sum d)^2 / sum d^2`.
+
+    Adimensional, se lee como "cuantos esfuerzos distintos hubo". No depende de
+    la velocidad del jugador ni de la duracion tipica del deporte: 20 puntos de
+    30 s y 6 tramos de 400 s dan 20 y 6 respectivamente.
+
+    Pondera por duracion, que es la razon de usar esto en vez de `len(bloques)`:
+    una corrida continua con un blip corto al lado ([500, 30]) da 1.12 — un solo
+    esfuerzo con ruido —, mientras que contar bloques diria 2.
+
+    Nota: opera sobre duraciones ya refinadas por velocidad (`_adelantar_inicios`),
+    pero el adelanto es de a lo sumo LATENCIA_FC_SEG, asi que mueve el resultado
+    en decimas. Sin bloques -> 0.0."""
+    if not bloques:
+        return 0.0
+    d = np.array([b["duracion_seg"] for b in bloques], dtype=float)
+    suma_cuadrados = float((d ** 2).sum())
+    if suma_cuadrados == 0:
+        return 0.0
+    return float(d.sum() ** 2 / suma_cuadrados)
+
+
+def patron_de_sesion(bloques) -> str:
+    """`intermitente` | `continuo` | `sin_bloques`.
+
+    El criterio no es una constante calibrable sino una definicion: redondeado a
+    esfuerzos enteros, ¿hubo al menos dos? Para dos bloques la frontera cae en
+    una razon de duraciones de 3.73x, o sea que cuentan como dos esfuerzos salvo
+    que uno sea casi cuatro veces el otro.
+
+    No mira la velocidad: el patron de arranque-parada esta en la forma del
+    esfuerzo, no en que tan rapido corra el jugador."""
+    if not bloques:
+        return "sin_bloques"
+    return "intermitente" if round(numero_efectivo_bloques(bloques)) >= 2 else "continuo"
+
+
 def hrr60(df, bloque):
     """Ppm que baja la FC en los 60 s posteriores al bloque."""
     fc, t = df["fc"].to_numpy(), df["t"].to_numpy()

@@ -102,7 +102,7 @@ def serie_bloque_sin_arranque_previo():
 
 @pytest.fixture
 def serie_intermitente_con_sprints():
-    """Arranque-parada con sprints por encima de UMBRAL_SPRINT_KMH."""
+    """Arranque-parada: dos esfuerzos claros con tramos rapidos que coinciden."""
     return _serie_v((60, 100, 0.5), (60, 185, 18.0), (60, 100, 0.5),
                     (60, 185, 18.0), (60, 100, 0.5))
 

@@ -1,6 +1,16 @@
-import pandas as pd
+import pytest
 
-from src.segment.blocks import detectar_bloques, hrr60
+from src.segment.blocks import (
+    detectar_bloques,
+    hrr60,
+    numero_efectivo_bloques,
+    patron_de_sesion,
+)
+
+
+def _bloques(*duraciones):
+    """Bloques minimos: patron_de_sesion y numero_efectivo_bloques solo leen duracion_seg."""
+    return [{"duracion_seg": d} for d in duraciones]
 
 
 def test_serie_plana_no_detecta_bloques(serie_plana, fc_max):
@@ -127,3 +137,62 @@ def test_usar_velocidad_false_ignora_la_columna_v(serie_bloque_con_arranque_prev
     solo_fc = detectar_bloques(
         serie_bloque_con_arranque_previo[["t", "fc"]].copy(), fc_max)
     assert sin_v == solo_fc
+
+
+# --- Forma del esfuerzo: numero efectivo de bloques ------------------------
+
+
+@pytest.mark.parametrize("duraciones, esperado", [
+    ([], 0.0),
+    ([100], 1.0),
+    ([100, 100], 2.0),
+    ([100, 100, 100], 3.0),
+])
+def test_numero_efectivo_casos_exactos(duraciones, esperado):
+    assert numero_efectivo_bloques(_bloques(*duraciones)) == pytest.approx(esperado)
+
+
+def test_numero_efectivo_pondera_por_duracion():
+    """Un esfuerzo largo con un blip al lado sigue siendo ~un esfuerzo."""
+    assert numero_efectivo_bloques(_bloques(500, 30)) == pytest.approx(1.12, abs=0.01)
+
+
+def test_numero_efectivo_ignora_micro_bloques_de_ruido():
+    """3 bloques reales + 5 diminutos ~= 3.5 esfuerzos, no 8."""
+    assert numero_efectivo_bloques(
+        _bloques(200, 200, 200, 10, 10, 10, 10, 10)) == pytest.approx(3.51, abs=0.01)
+
+
+@pytest.mark.parametrize("duraciones, esperado", [
+    ([], "sin_bloques"),
+    ([590], "continuo"),                 # corrida continua real
+    ([500, 30], "continuo"),             # contar bloques diria "2" y se equivocaria
+    ([500, 30, 25], "continuo"),
+    ([30] * 20, "intermitente"),         # ultimate con puntos cortos
+    ([90] * 15, "intermitente"),
+    ([400] * 6, "intermitente"),         # futbol con tramos largos
+    ([100, 100], "intermitente"),
+])
+def test_patron_de_sesion(duraciones, esperado):
+    assert patron_de_sesion(_bloques(*duraciones)) == esperado
+
+
+def test_patron_no_depende_de_la_duracion_del_esfuerzo():
+    """La medida es adimensional: mismo numero de esfuerzos, distinto deporte."""
+    assert (patron_de_sesion(_bloques(*[30] * 8))
+            == patron_de_sesion(_bloques(*[400] * 8))
+            == "intermitente")
+
+
+def test_dos_bloques_parecidos_son_dos_esfuerzos():
+    """Caso borde: 60s y 50s dan n_efectivo=1.98. Con criterio `>= 2` estricto
+    saldria "continuo", contradiciendo a calcular_metricas, que acepta la sesion
+    por tener 2 bloques. El redondeo lo resuelve."""
+    assert numero_efectivo_bloques(_bloques(60, 50)) == pytest.approx(1.98, abs=0.01)
+    assert patron_de_sesion(_bloques(60, 50)) == "intermitente"
+
+
+def test_un_bloque_que_aplasta_al_otro_es_un_solo_esfuerzo():
+    """La frontera esta en una razon de 3.73x entre las dos duraciones."""
+    assert patron_de_sesion(_bloques(370, 100)) == "intermitente"
+    assert patron_de_sesion(_bloques(380, 100)) == "continuo"

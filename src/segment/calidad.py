@@ -10,13 +10,11 @@ numero agregado ahi debilita el verificador (tolerancia +-1) para todos los
 demas. Ver `test_calidad_no_expone_cifras_al_prompt`."""
 
 from src.common.constants import FRAC_INTERPOLADA_MAX, SOLAPE_MIN_CONFIABLE
-from src.segment.velocidad import (
-    patron_de_sesion,
-    perfil_velocidad,
-    solape_sprint_bloques,
-)
+from src.segment.blocks import patron_de_sesion
+from src.segment.velocidad import solape_veloz_bloques, tiene_velocidad
 
 MOTIVO_CONTINUO = "la sesion no muestra patron de arranque-parada"
+MOTIVO_SIN_BLOQUES = "no se detecto ningun bloque de esfuerzo sobre el umbral de FC"
 MOTIVO_HUECOS = "hay tramos de frecuencia cardiaca reconstruidos por interpolacion"
 MOTIVO_SIN_COINCIDENCIA = "los bloques de FC no coinciden con los tramos de velocidad alta"
 MOTIVO_SIN_VELOCIDAD = "la sesion no trae velocidad utilizable: la segmentacion se apoya solo en FC"
@@ -27,8 +25,9 @@ def calidad_segmentacion(df, bloques) -> dict:
     pierde en varias operaciones (los evals hacen slicing de la serie), asi que
     la ausencia de metadatos degrada a `desconocida`, no revienta."""
     fuente = df.attrs.get("fuente_velocidad")
-    perfil = perfil_velocidad(df)
-    patron = patron_de_sesion(perfil, fuente)
+    hay_velocidad = tiene_velocidad(df)
+    # El patron sale de la forma del esfuerzo, no de la velocidad.
+    patron = patron_de_sesion(bloques)
 
     frac_interpolada = df.attrs.get("frac_interpolada")
     if frac_interpolada is None:
@@ -38,7 +37,7 @@ def calidad_segmentacion(df, bloques) -> dict:
     else:
         continuidad = "ok"
 
-    solape = solape_sprint_bloques(df, bloques)
+    solape = solape_veloz_bloques(df, bloques)
     if solape is None:
         coincidencia = "no_evaluable"
     else:
@@ -48,19 +47,22 @@ def calidad_segmentacion(df, bloques) -> dict:
     motivos = []
     if patron == "continuo":
         motivos.append(MOTIVO_CONTINUO)
+    if patron == "sin_bloques":
+        motivos.append(MOTIVO_SIN_BLOQUES)
     if continuidad == "con_huecos":
         motivos.append(MOTIVO_HUECOS)
     if coincidencia == "baja":
         motivos.append(MOTIVO_SIN_COINCIDENCIA)
-    if patron in ("sin_velocidad", "no_evaluable"):
+    if not hay_velocidad:
         motivos.append(MOTIVO_SIN_VELOCIDAD)
 
-    # Primera regla que aplica manda. Nota: `alta` exige velocidad GPS, asi que
-    # una serie sin velocidad nunca pasa de `media` — es honesto, y como la
-    # alerta solo se dispara en `baja`, los evals sinteticos no cambian.
-    if patron == "continuo" or continuidad == "con_huecos":
+    # Primera regla que aplica manda. Nota: `alta` exige velocidad utilizable,
+    # asi que una serie sin ella nunca pasa de `media` — es honesto (sin GPS no
+    # se puede cotejar la FC contra el movimiento) y deja intacto el matiz que
+    # el prompt aplica con confianza media, o sea los evals no cambian.
+    if patron in ("continuo", "sin_bloques") or continuidad == "con_huecos":
         confianza = "baja"
-    elif coincidencia == "baja" or patron in ("sin_velocidad", "no_evaluable"):
+    elif coincidencia == "baja" or not hay_velocidad:
         confianza = "media"
     else:
         confianza = "alta"
@@ -79,7 +81,8 @@ def diagnostico_no_intermitente(df, bloques, calidad) -> list[str]:
     bloques'); esto agrega la causa."""
     frases = []
     if calidad["patron"] == "continuo":
-        frases.append("Sesion no intermitente: la velocidad no muestra tramos de sprint.")
+        frases.append("Sesion no intermitente: el esfuerzo se concentro en un "
+                      "unico tramo sostenido.")
     if calidad["continuidad_senal"] == "con_huecos":
         frases.append("La serie de frecuencia cardiaca tiene tramos reconstruidos "
                       "por interpolacion.")

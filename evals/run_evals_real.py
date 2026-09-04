@@ -94,14 +94,14 @@ rechaza la sesion (`{{"error": [...]}}`) antes de llamar al modelo.
 
 ## Que aporta la senal de velocidad
 
-Desde que `detectar_bloques` consume la columna `v` (ver `src/segment/velocidad.py`
-y `src/segment/calidad.py`), el rechazo dejo de ser un sintoma opaco
-("menos de 2 bloques") y trae la causa. Para esta sesion la confianza de
-segmentacion es **baja**, por dos razones independientes y verificables:
+Desde que existe la capa de calidad (`src/segment/calidad.py`), el rechazo dejo
+de ser un sintoma opaco ("menos de 2 bloques") y trae la causa. Para esta sesion
+la confianza de segmentacion es **baja**, por dos razones independientes y
+verificables:
 
-1. **Patron continuo**: 0.0% de las muestras superan los 14 km/h. El maximo de
-   toda la corrida es 13.4 km/h. No hay sprints, luego no hay arranque-parada.
-   (El partido sintetico, en contraste, pasa 8.3% del tiempo sobre ese umbral.)
+1. **Patron continuo**: el numero efectivo de bloques es 1.00 — un unico
+   esfuerzo sostenido. La medida es adimensional (no depende de la velocidad del
+   jugador ni de la duracion tipica del deporte): el partido sintetico da 13.94.
 2. **Senal con huecos**: la serie de FC tiene dos huecos (184 s y 145 s) que
    `load_session` rellena por interpolacion lineal. Son ~16% de la sesion, y
    esa FC es reconstruida, no medida. Antes eso solo salia por consola; ahora

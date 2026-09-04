@@ -2,6 +2,7 @@ from src.segment.blocks import detectar_bloques
 from src.segment.calidad import (
     MOTIVO_CONTINUO,
     MOTIVO_HUECOS,
+    MOTIVO_SIN_BLOQUES,
     MOTIVO_SIN_VELOCIDAD,
     calidad_segmentacion,
     diagnostico_no_intermitente,
@@ -14,9 +15,12 @@ def _calidad(df, fc_max):
     return calidad_segmentacion(df, detectar_bloques(df, fc_max))
 
 
-def test_sin_velocidad_la_confianza_nunca_es_alta(serie_dos_mitades, fc_max):
+def test_sin_velocidad_se_puede_clasificar_el_patron(serie_dos_mitades, fc_max):
+    """El patron sale de la forma del esfuerzo, asi que una sesion sin GPS ya se
+    puede clasificar. Pero la confianza se topa en `media`: sin velocidad no hay
+    con que cotejar la FC."""
     calidad = _calidad(serie_dos_mitades, fc_max)
-    assert calidad["patron"] == "sin_velocidad"
+    assert calidad["patron"] == "intermitente"
     assert calidad["confianza"] == "media"
     assert MOTIVO_SIN_VELOCIDAD in calidad["motivos"]
 
@@ -57,8 +61,20 @@ def test_velocidad_derivada_de_distancia_no_da_confianza_alta(fc_max):
     df = _serie_v((60, 100, 0.5), (60, 185, 18.0), (60, 100, 0.5),
                   (60, 185, 18.0), (60, 100, 0.5), fuente_velocidad=FUENTE_DERIVADA)
     calidad = _calidad(df, fc_max)
-    assert calidad["patron"] == "no_evaluable"
+    # el patron si se puede evaluar (sale de los bloques), pero la velocidad
+    # derivada de distancia no sirve para cotejar: la confianza no llega a alta
+    assert calidad["patron"] == "intermitente"
     assert calidad["confianza"] == "media"
+    assert MOTIVO_SIN_VELOCIDAD in calidad["motivos"]
+
+
+def test_sin_bloques_da_confianza_baja(serie_plana, fc_max):
+    """Sin esto, una serie plana con GPS impecable daria confianza alta sobre
+    cero bloques."""
+    calidad = _calidad(serie_plana, fc_max)
+    assert calidad["patron"] == "sin_bloques"
+    assert calidad["confianza"] == "baja"
+    assert MOTIVO_SIN_BLOQUES in calidad["motivos"]
 
 
 def test_calidad_no_expone_cifras_al_prompt(serie_intermitente_con_sprints, fc_max):

@@ -37,9 +37,11 @@ Recibe la serie temporal de una sesión (frecuencia cardíaca y velocidad con ma
 
 **Bloques, no sprints.** La frecuencia cardíaca tiene entre 15 y 30 segundos de latencia y el GPS pierde precisión con cambios de dirección bruscos. Contar sprints individuales no es honesto con este hardware. Ronin detecta bloques de esfuerzo —que en ultimate corresponden aproximadamente a los puntos jugados— porque eso sí es detectable con confianza.
 
-La velocidad sí se usa, pero para dos cosas acotadas: corregir el *inicio* de cada bloque (por esa latencia, cuando la FC cruza el umbral el esfuerzo ya empezó) y decidir si la sesión tiene patrón de arranque-parada. Nunca cambia cuántos bloques hay ni qué tan intensos son: en eso manda la FC.
+La velocidad sí se usa, pero para dos cosas acotadas: corregir el *inicio* de cada bloque (por esa latencia, cuando la FC cruza el umbral el esfuerzo ya empezó) y comprobar que los tramos rápidos coincidan con los intensos. Nunca cambia cuántos bloques hay ni qué tan intensos son: en eso manda la FC.
 
-**El sistema dice cuánto confía.** Cada segmentación sale con una etiqueta de confianza (`alta`/`media`/`baja`). Una corrida continua, una serie con tramos reconstruidos por interpolación, o bloques de FC que no coinciden con los tramos rápidos bajan esa confianza y levantan una alerta. Ronin prefiere decir "esto no lo segmenté bien" antes que entregar un análisis que parece sólido y no lo es.
+**Ningún umbral te compara con otro jugador.** Si un partido fue intermitente no se decide con una velocidad de sprint fija —eso mediría qué tan rápido eres, no si hiciste esfuerzos repetidos— sino con la *forma* del esfuerzo: cuántos esfuerzos efectivamente distintos hubo. Un esfuerzo largo y sostenido cuenta como uno; veinte puntos cortos cuentan como veinte. La medida es adimensional, así que da igual si tus puntos duran 30 segundos o tres minutos, y si corres a 12 o a 22 km/h.
+
+**El sistema dice cuánto confía.** Cada segmentación sale con una etiqueta de confianza (`alta`/`media`/`baja`). Una sesión continua, una serie con tramos reconstruidos por interpolación, o bloques de FC que no coinciden con los tramos rápidos bajan esa confianza y levantan una alerta. Ronin prefiere decir "esto no lo segmenté bien" antes que entregar un análisis que parece sólido y no lo es.
 
 **Lo subjetivo pesa.** El reloj no sabe cómo te sentiste. Mismo ritmo, misma frecuencia cardíaca, peor sensación es una señal real, y ninguna app que solo lea datos de sensores puede verla. Si el jugador reporta molestia física, eso pesa por encima de cualquier métrica.
 
