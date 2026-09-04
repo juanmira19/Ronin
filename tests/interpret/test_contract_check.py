@@ -74,11 +74,25 @@ def test_contract_check_severidad_invalida_falla():
 
 
 def test_contract_check_campo_faltante_falla():
-    # recomendacion_semana es el unico campo requerido que contract_check no lee
-    # dentro de `reglas`, asi que borrarlo no revienta con KeyError (a diferencia
-    # de borrar, por ejemplo, "alertas" o "degradacion").
     output = _output_valido()
     del output["recomendacion_semana"]
     resultado = contract_check(output)
-    assert "recomendacion_semana" in resultado["faltantes"]
+    assert resultado["faltantes"] == ["recomendacion_semana"]
+    assert resultado["cumple_contrato"] is False
+
+
+def test_contract_check_campo_faltante_usado_en_reglas_no_revienta():
+    # antes de la correccion, borrar un campo que `reglas` lee directamente
+    # (como "alertas") tiraba KeyError en vez de reportarlo en "faltantes".
+    output = _output_valido()
+    del output["alertas"]
+    resultado = contract_check(output)
+    assert resultado["faltantes"] == ["alertas"]
+    assert resultado["cumple_contrato"] is False
+
+
+def test_contract_check_campo_extra_no_reconocido_falla():
+    output = _output_valido(campo_inventado="algo")
+    resultado = contract_check(output)
+    assert resultado["extras"] == ["campo_inventado"]
     assert resultado["cumple_contrato"] is False

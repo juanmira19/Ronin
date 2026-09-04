@@ -144,6 +144,14 @@ def contract_check(output: dict) -> dict:
                 "motivo": output["error"]}
 
     actual = set(output.keys())
+    faltantes = REQUIRED_FIELDS - actual
+    if faltantes:
+        return {"campos_requeridos": sorted(REQUIRED_FIELDS),
+                "campos_recibidos": sorted(actual),
+                "faltantes": sorted(faltantes),
+                "extras": sorted(actual - REQUIRED_FIELDS),
+                "cumple_contrato": False}
+
     reglas = {
         "lectura_max_400": len(output["lectura_sesion"]) <= 400,
         "divergencia_valida": output["divergencia_percepcion"] in
@@ -161,8 +169,8 @@ def contract_check(output: dict) -> dict:
     return {
         "campos_requeridos": sorted(REQUIRED_FIELDS),
         "campos_recibidos": sorted(actual),
-        "faltantes": sorted(REQUIRED_FIELDS - actual),
+        "faltantes": [],
         "extras": sorted(actual - REQUIRED_FIELDS),
         **reglas,
-        "cumple_contrato": actual == REQUIRED_FIELDS and all(reglas.values()),
+        "cumple_contrato": not (actual - REQUIRED_FIELDS) and all(reglas.values()),
     }
