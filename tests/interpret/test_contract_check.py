@@ -96,3 +96,38 @@ def test_contract_check_campo_extra_no_reconocido_falla():
     resultado = contract_check(output)
     assert resultado["extras"] == ["campo_inventado"]
     assert resultado["cumple_contrato"] is False
+
+
+def test_contract_check_acepta_confianza_en_bloques_esfuerzo():
+    output = _output_valido(bloques_esfuerzo={
+        "cantidad": 2, "duracion_media_seg": 50,
+        "distribucion": {"bajo": 0, "moderado": 1, "maximo": 1},
+        "confianza": "alta",
+    })
+    resultado = contract_check(output)
+    assert resultado["confianza_valida"] is True
+    assert resultado["cumple_contrato"] is True
+
+
+def test_contract_check_confianza_invalida_falla():
+    output = _output_valido(bloques_esfuerzo={
+        "cantidad": 2, "duracion_media_seg": 50,
+        "distribucion": {"bajo": 0, "moderado": 1, "maximo": 1},
+        "confianza": "altisima",
+    })
+    resultado = contract_check(output)
+    assert resultado["confianza_valida"] is False
+    assert resultado["cumple_contrato"] is False
+
+
+def test_alerta_de_segmentacion_no_obliga_revision_humana():
+    """La alerta deterministica es severidad `atencion`: no debe voltear
+    requiere_revision, que esta reservado a molestia fisica / patron repetido."""
+    output = _output_valido(
+        alertas=[{"tipo": "segmentacion_dudosa", "mensaje": "sesion continua",
+                  "severidad": "atencion"}],
+        requiere_revision=False,
+    )
+    resultado = contract_check(output)
+    assert resultado["revision_coherente"] is True
+    assert resultado["cumple_contrato"] is True

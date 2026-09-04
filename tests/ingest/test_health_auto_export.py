@@ -49,6 +49,39 @@ def test_load_session_deriva_velocidad_de_distancia_sin_gps(tmp_path):
     assert (df["v"] >= 0).all()
 
 
+def test_load_session_reporta_huecos_interpolados(tmp_path):
+    """La FC de un hueco se sigue interpolando, pero el pipeline debe saber que
+    ese tramo es reconstruido y no medido."""
+    anon = {
+        "tipo_sesion": "partido",
+        "duracion_seg": 600,
+        # un solo hueco largo: 180s entre t=60 y t=240. El resto va cada 60s,
+        # que no supera GAP_INTERPOLADO_SEG.
+        "heart_rate": [{"t": t, "bpm": 140} for t in
+                       (0, 60, 240, 300, 360, 420, 480, 540, 600)],
+        "route_speed": [],
+        "distance_km": [],
+    }
+    path = tmp_path / "export.json"
+    path.write_text(json.dumps(anon), encoding="utf-8")
+
+    df = load_session(path)
+
+    assert df.attrs["huecos_interpolados"] == [{"t": 60, "dur_seg": 180}]
+    assert df.attrs["frac_interpolada"] == 180 / 600
+
+
+def test_load_session_sin_huecos_reporta_fraccion_cero(tmp_path):
+    export = generar_export_sintetico_partido(seed=11)
+    path = tmp_path / "export.json"
+    path.write_text(json.dumps(export), encoding="utf-8")
+
+    df = load_session(path)
+
+    assert df.attrs["huecos_interpolados"] == []
+    assert df.attrs["frac_interpolada"] == 0.0
+
+
 def test_load_session_sin_velocidad_no_agrega_columna_v(tmp_path):
     anon = {
         "tipo_sesion": "partido",

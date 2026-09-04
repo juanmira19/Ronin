@@ -12,10 +12,18 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from src.common.constants import SAMPLE_DT
+from src.common.constants import GAP_INTERPOLADO_SEG, SAMPLE_DT
 from src.ingest.anonymize import anonymize_dict
 
-GAP_AVISO_SEG = 60  # huecos mas grandes que esto en el crudo se interpolan igual, pero se avisan
+GAP_AVISO_SEG = GAP_INTERPOLADO_SEG  # se mantiene el nombre por compatibilidad
+
+
+def _huecos(muestras_t: list[int], gap_min_seg: int) -> list[dict]:
+    """Tramos sin muestras mas largos que `gap_min_seg`. Se siguen interpolando,
+    pero el pipeline necesita saber que esa FC es reconstruida, no medida."""
+    orden = sorted(muestras_t)
+    return [{"t": int(a), "dur_seg": int(b - a)}
+            for a, b in zip(orden, orden[1:]) if b - a > gap_min_seg]
 
 
 def _es_crudo(data: dict) -> bool:
@@ -38,11 +46,11 @@ def load_session(path: str | Path) -> pd.DataFrame:
 
     hr_t = [m["t"] for m in anon["heart_rate"]]
     hr_v = [m["bpm"] for m in anon["heart_rate"]]
-    if hr_t:
-        gaps = np.diff(sorted(hr_t))
-        if len(gaps) and gaps.max() > GAP_AVISO_SEG:
-            print(f"Aviso: hueco de {int(gaps.max())}s en heart_rate — se interpola igual, "
-                  f"revisar si el export vino agregado en vez de raw.")
+    huecos = _huecos(hr_t, GAP_INTERPOLADO_SEG) if hr_t else []
+    if huecos:
+        peor = max(h["dur_seg"] for h in huecos)
+        print(f"Aviso: hueco de {peor}s en heart_rate — se interpola igual, "
+              f"revisar si el export vino agregado en vez de raw.")
 
     grid = np.arange(0, duracion + SAMPLE_DT, SAMPLE_DT)
     fc = _a_malla_regular(hr_t, hr_v, duracion)
@@ -69,4 +77,7 @@ def load_session(path: str | Path) -> pd.DataFrame:
 
     df.attrs["tipo_sesion"] = anon.get("tipo_sesion")
     df.attrs["fuente_velocidad"] = fuente_v if velocidad else None
+    df.attrs["huecos_interpolados"] = huecos
+    df.attrs["frac_interpolada"] = (
+        sum(h["dur_seg"] for h in huecos) / duracion if duracion else 0.0)
     return df

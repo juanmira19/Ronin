@@ -25,6 +25,18 @@ def test_calcular_metricas_degradacion_y_conclusiones(serie_dos_mitades, fc_max)
     assert m["conclusiones"]["recuperacion"] == "recupero peor hacia el final"
 
 
+def test_confianza_se_propaga_a_bloques_esfuerzo(serie_dos_mitades, fc_max):
+    bloques = detectar_bloques(serie_dos_mitades, fc_max)
+    m = calcular_metricas(serie_dos_mitades, bloques, fc_max, calidad={"confianza": "alta"})
+    assert m["bloques_esfuerzo"]["confianza"] == "alta"
+
+
+def test_sin_calidad_la_confianza_es_no_evaluada(serie_dos_mitades, fc_max):
+    bloques = detectar_bloques(serie_dos_mitades, fc_max)
+    m = calcular_metricas(serie_dos_mitades, bloques, fc_max)
+    assert m["bloques_esfuerzo"]["confianza"] == "no_evaluada"
+
+
 def test_divergencia_sin_bloques_es_alineada(serie_plana):
     assert divergencia(5, [], serie_plana) == ("alineado", 1.0)
 
