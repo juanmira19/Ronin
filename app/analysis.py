@@ -7,7 +7,7 @@ dibujarla."""
 
 import functools
 import json
-from typing import Callable
+from typing import Callable, Optional
 
 import numpy as np
 
@@ -48,7 +48,7 @@ def _distancia_del_export(sesion: dict, hasta_seg=None):
                if hasta_seg is None or x["t"] <= hasta_seg)
 
 
-def estadisticas_reloj(df, sesion: dict | None = None) -> dict:
+def estadisticas_reloj(df, sesion: Optional[dict] = None) -> dict:
     """Lo que muestra el reloj al terminar: distancia, ritmo medio, FC media.
 
     Es exactamente el promedio que el README acusa de borrar la informacion, asi
@@ -88,7 +88,7 @@ def serie_grafica(df, bloques) -> dict:
 
 
 def analizar(sesion_id: str, rpe: int, nota: str, modo: str = "auto",
-             interpretar: Callable | None = None) -> dict:
+             interpretar: Optional[Callable] = None) -> dict:
     """Corre el pipeline real y devuelve todo lo que la pagina necesita pintar.
 
     Si el modelo no esta disponible y no hay cache, NO se inventa la

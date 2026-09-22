@@ -9,6 +9,7 @@ los evals (`src/`). Es la forma de la API que consumiria la app real.
 
 import os
 from pathlib import Path
+from typing import Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
@@ -29,7 +30,7 @@ class PeticionAnalisis(BaseModel):
     sesion_id: str = Field(..., description="id de una sesion del catalogo")
     esfuerzo_percibido: int = Field(8, ge=1, le=10)
     nota: str = Field("", max_length=600)
-    modo: str | None = Field(None, description="auto | vivo | cache")
+    modo: Optional[str] = Field(None, description="auto | vivo | cache")
 
 
 @app.get("/api/catalogo")

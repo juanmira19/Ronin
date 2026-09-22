@@ -2,7 +2,7 @@
 calculadas por el sistema. Extraido de la celda 16 y 20 del notebook."""
 
 import json
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -97,7 +97,7 @@ def _interpretar_con_modelo(payload: dict) -> dict:
                           temperature=0.3)
 
 
-def run_prototype(real_input: dict, detalle: dict | None = None,
+def run_prototype(real_input: dict, detalle: Optional[dict] = None,
                   interpretar=None) -> dict:
     """`detalle`, si se pasa, se rellena in-place con material de diagnostico
     (bloques, calidad, cifras intrusas, metricas crudas). El dict devuelto NO
