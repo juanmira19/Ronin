@@ -1,0 +1,16 @@
+{
+  "clave": "2161c3743108d5321252",
+  "nota": "Me senti fuerte al inicio y me costo recuperar al final.",
+  "esfuerzo_percibido": 10,
+  "interpretacion": {
+    "lectura_sesion": "Iniciaste con buena intensidad, pero perdiste intensidad en la segunda mitad y la recuperación fue peor al final.",
+    "recomendacion_semana": "Esta semana prioriza entrenamientos de resistencia y trabajo de recuperación para mantener la intensidad durante toda la sesión, especialmente en la segunda mitad.",
+    "alertas": [
+      {
+        "tipo": "divergencia_percepcion",
+        "mensaje": "El esfuerzo percibido fue mayor que la carga objetiva calculada.",
+        "severidad": "atencion"
+      }
+    ]
+  }
+}

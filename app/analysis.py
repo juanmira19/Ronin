@@ -7,15 +7,20 @@ dibujarla."""
 
 import functools
 import json
-from typing import Callable
+from typing import Callable, Optional
 
 import numpy as np
 
+from app.lenguaje import fecha_partido, frase_reloj, hallazgos, mitades
 from app.llm_cache import InterpretacionNoDisponible, interpretar as interpretar_cache
-from app.presets import ESCALA, HISTORIAL, NOTAS, PERFIL, SESIONES, ruta
+from app.llm_cache import responder as responder_cache
+from app.presets import ESCALA, HISTORIAL, NOTAS, PERFIL, SESIONES, registrar_importada, ruta
 from src.common.constants import SAMPLE_DT
+from src.ingest.apple_health_xml import onboarding
 from src.ingest.health_auto_export import load_session
+from src.interpret.preguntas import PREGUNTAS, responder_pregunta
 from src.interpret.prototype import contract_check, run_prototype
+from src.metrics.session import por_mitad
 
 MAX_PUNTOS_GRAFICA = 700
 
@@ -48,7 +53,7 @@ def _distancia_del_export(sesion: dict, hasta_seg=None):
                if hasta_seg is None or x["t"] <= hasta_seg)
 
 
-def estadisticas_reloj(df, sesion: dict | None = None) -> dict:
+def estadisticas_reloj(df, sesion: Optional[dict] = None) -> dict:
     """Lo que muestra el reloj al terminar: distancia, ritmo medio, FC media.
 
     Es exactamente el promedio que el README acusa de borrar la informacion, asi
@@ -88,7 +93,7 @@ def serie_grafica(df, bloques) -> dict:
 
 
 def analizar(sesion_id: str, rpe: int, nota: str, modo: str = "auto",
-             interpretar: Callable | None = None) -> dict:
+             interpretar: Optional[Callable] = None) -> dict:
     """Corre el pipeline real y devuelve todo lo que la pagina necesita pintar.
 
     Si el modelo no esta disponible y no hay cache, NO se inventa la
@@ -125,6 +130,13 @@ def analizar(sesion_id: str, rpe: int, nota: str, modo: str = "auto",
         "texto_descartado": detalle.get("texto_descartado", False),
     }
     base["fcmax"] = detalle.get("fcmax")
+    base["frase_reloj"] = frase_reloj(base["reloj"])
+    base["hallazgos"] = (hallazgos(detalle["metricas"], detalle.get("calidad"))
+                         if detalle.get("metricas") else [])
+    base["partido"] = (por_mitad(df, detalle["bloques"])
+                       if detalle.get("metricas") and detalle.get("bloques") else None)
+    base["mitades"] = (mitades(detalle["metricas"], base["partido"])
+                       if base["partido"] else [])
     base["fuente_interpretacion"] = detalle.get("fuente_interpretacion")
     base["interpretacion_disponible"] = interpretacion_disponible
     base["motivo_sin_interpretacion"] = motivo_sin_interpretacion
@@ -145,6 +157,47 @@ def analizar(sesion_id: str, rpe: int, nota: str, modo: str = "auto",
     return base
 
 
+def _lectura_ya_mostrada(payload: dict, modo: str) -> dict:
+    """La pregunta se hace sobre la lectura que el jugador ya vio, que quedo en
+    cache al analizar. Regenerarla daria otro texto distinto al de la pantalla."""
+    try:
+        return interpretar_cache(payload, modo="cache")
+    except InterpretacionNoDisponible:
+        return interpretar_cache(payload, modo=modo)
+
+
+def preguntar(sesion_id: str, rpe: int, nota: str, pregunta_id: str, modo: str = "auto",
+              interpretar: Optional[Callable] = None, responder: Optional[Callable] = None) -> dict:
+    """Responde una pregunta sugerida sobre la sesion ya analizada. Vuelve a
+    correr el pipeline (determinístico, y la lectura sale de cache) para partir
+    exactamente del mismo paquete y las mismas cifras permitidas."""
+    sesion = SESIONES[sesion_id]
+    detalle: dict = {}
+    interpretar = interpretar or (lambda payload: _lectura_ya_mostrada(payload, modo))
+    responder = responder or (lambda entrada: responder_cache(entrada, modo=modo))
+    salida = run_prototype({"perfil": PERFIL, "serie": serie_de(sesion_id),
+                            "tipo_sesion": sesion["tipo_sesion"], "esfuerzo_percibido": rpe,
+                            "nota": nota, "historial": HISTORIAL},
+                           detalle=detalle, interpretar=interpretar)
+    if "error" in salida or detalle.get("texto_descartado"):
+        raise InterpretacionNoDisponible("Primero tiene que haber una lectura de esta sesion.")
+    return responder_pregunta(detalle["payload_modelo"], salida["lectura_sesion"], pregunta_id,
+                              detalle["cifras_permitidas"], responder=responder)
+
+
 def catalogo() -> dict:
     return {"sesiones": list(SESIONES.values()), "notas": NOTAS,
-            "escala": ESCALA, "perfil": PERFIL}
+            "escala": ESCALA, "perfil": PERFIL,
+            "preguntas": [{"id": k, "texto": v} for k, v in PREGUNTAS.items()]}
+
+
+def importar_export(path) -> dict:
+    """Onboarding: del zip de Apple Salud, solo los partidos, ya agregados al
+    catalogo. Lo que se dejo fuera se cuenta pero no se lista."""
+    r = onboarding(path)
+    partidos = [registrar_importada(f"real_{x['partido'].inicio:%Y%m%d_%H%M}", x["sesion"],
+                                    fecha_partido(x["partido"].inicio))
+                for x in r["partidos"]]
+    _cargar.cache_clear()  # un reimport puede pisar un archivo ya leido
+    return {"partidos": [{k: v for k, v in p.items() if k != "archivo"} for p in partidos],
+            "descartados": r["descartados"]}

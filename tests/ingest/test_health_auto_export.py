@@ -1,6 +1,7 @@
 import json
 
 import numpy as np
+import pytest
 
 from src.common.constants import SAMPLE_DT
 from src.ingest.health_auto_export import _es_crudo, load_session
@@ -37,7 +38,8 @@ def test_load_session_deriva_velocidad_de_distancia_sin_gps(tmp_path):
         "duracion_seg": 120,
         "heart_rate": [{"t": 0, "bpm": 100}, {"t": 120, "bpm": 140}],
         "route_speed": [],
-        "distance_km": [{"t": 0, "km": 0.0}, {"t": 60, "km": 0.5}, {"t": 120, "km": 1.0}],
+        # por incrementos: 0,1 km y luego 0,2 km en cada minuto
+        "distance_km": [{"t": 0, "km": 0.0}, {"t": 60, "km": 0.1}, {"t": 120, "km": 0.2}],
     }
     path = tmp_path / "export.json"
     path.write_text(json.dumps(anon), encoding="utf-8")
@@ -47,6 +49,10 @@ def test_load_session_deriva_velocidad_de_distancia_sin_gps(tmp_path):
     assert "v" in df.columns
     assert df.attrs["fuente_velocidad"] == "distance_km (derivada)"
     assert (df["v"] >= 0).all()
+    # 0,1 km en 60 s = 6 km/h; 0,2 km en 60 s = 12 km/h. Con la resta de
+    # incrementos saldria 6 y 6, que no significa nada.
+    assert df.loc[df["t"] == 60, "v"].item() == pytest.approx(6.0)
+    assert df.loc[df["t"] == 120, "v"].item() == pytest.approx(12.0)
 
 
 def test_load_session_reporta_huecos_interpolados(tmp_path):

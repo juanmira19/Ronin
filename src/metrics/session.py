@@ -6,12 +6,33 @@ import numpy as np
 from src.segment.blocks import hrr60
 
 
+def _mitades(df, bloques):
+    """Parte los bloques por la mitad de la sesion segun donde empiezan. Es el
+    mismo corte que usan pico_pct y recuperacion_pct."""
+    mitad = df["t"].iloc[-1] / 2
+    return (mitad, [b for b in bloques if b["inicio_seg"] < mitad],
+            [b for b in bloques if b["inicio_seg"] >= mitad])
+
+
+def por_mitad(df, bloques):
+    """Lo que la pantalla cuenta de cada mitad: cuantos esfuerzos hubo y cuanto
+    bajaba el pulso, en promedio, en el minuto siguiente a cada uno. Son las
+    mismas cifras de las que sale recuperacion_pct, sin convertirlas en un
+    porcentaje que el jugador no sabe leer. No van al prompt."""
+    mitad, b1, b2 = _mitades(df, bloques)
+
+    def resumen(bs):
+        rec = [v for v in (hrr60(df, b) for b in bs) if v is not None]
+        return {"esfuerzos": len(bs),
+                "recuperacion_ppm": int(round(np.mean(rec))) if rec else None}
+
+    return {"mitad_seg": int(mitad), "primera": resumen(b1), "segunda": resumen(b2)}
+
+
 def calcular_metricas(df, bloques, fc_max, calidad=None):
     if len(bloques) < 2:
         raise ValueError("Segmentacion insuficiente: menos de 2 bloques detectados")
-    mitad = df["t"].iloc[-1] / 2
-    b1 = [b for b in bloques if b["inicio_seg"] < mitad]
-    b2 = [b for b in bloques if b["inicio_seg"] >= mitad]
+    _, b1, b2 = _mitades(df, bloques)
 
     if b1 and b2:
         p1 = float(np.mean([b["fc_pico"] for b in b1]))

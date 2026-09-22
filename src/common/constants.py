@@ -27,3 +27,12 @@ LATENCIA_FC_SEG = 20
 SOLAPE_MIN_CONFIABLE = 0.50  # HIPOTESIS: solape minimo sprint-vs-bloques para confiar
 FRAC_INTERPOLADA_MAX = 0.05  # HIPOTESIS: por encima de esto la serie tiene demasiado relleno
 GAP_INTERPOLADO_SEG = 60  # huecos mas grandes que esto se interpolan igual, pero se reportan
+
+DURACION_MIN_SESION_MIN = 15  # por debajo no hay suficientes bloques para comparar mitades
+
+# --- Onboarding desde export.xml -------------------------------------------
+# HIPOTESIS: el reloj corta un partido en varios workouts cuando alguien pausa o
+# reinicia entre puntos o en el medio tiempo. Pausas de hasta este largo se
+# tratan como el mismo partido. Sale de UNA sola sesion real (2026-09-04): 20 s
+# entre las dos partes del partido y ~40 min contra el calentamiento previo.
+PAUSA_MAX_ENTRE_TRAMOS_SEG = 300

@@ -60,11 +60,12 @@ def load_session(path: str | Path) -> pd.DataFrame:
     velocidad = anon.get("route_speed") or []
     fuente_v = "route_speed"
     if not velocidad and anon.get("distance_km"):
-        # sin GPS: derivar velocidad km/h por diferencia entre muestras de distancia
+        # sin GPS: derivar velocidad km/h. `distance_km` viene por incrementos
+        # (lo recorrido desde la muestra anterior), no acumulada.
         dist = anon["distance_km"]
         velocidad = [
             {"t": dist[i]["t"],
-             "speed_kmh": max(0.0, (dist[i]["km"] - dist[i - 1]["km"])
+             "speed_kmh": max(0.0, dist[i]["km"]
                                / max(dist[i]["t"] - dist[i - 1]["t"], 1) * 3600)}
             for i in range(1, len(dist))
         ]

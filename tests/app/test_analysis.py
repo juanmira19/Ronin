@@ -92,3 +92,27 @@ def test_toda_sesion_del_catalogo_carga_y_responde(sesion_id):
     r = analizar(sesion_id, 7, "nota", interpretar=interprete_falso)
     assert r["estado"] in {"ok", "rechazada"}
     assert r["grafica"]["t"] and r["reloj"]["duracion_min"] > 0
+
+
+def test_preguntar_parte_de_la_misma_lectura_y_las_mismas_cifras():
+    from app.analysis import preguntar
+
+    vistas = {}
+
+    def responder_falso(entrada):
+        vistas["entrada"] = entrada
+        return {"respuesta": "Guarda tu ultimo corte para el final.", "_fuente": "prueba"}
+
+    r = preguntar("partido", 8, "nota", "proximo",
+                  interpretar=interprete_falso, responder=responder_falso)
+    assert r["respuesta"] == "Guarda tu ultimo corte para el final."
+    assert vistas["entrada"]["LECTURA_YA_MOSTRADA"] == interprete_falso({})["lectura_sesion"]
+    assert "METRICAS" in vistas["entrada"]
+
+
+def test_no_se_pregunta_sobre_una_sesion_rechazada():
+    from app.analysis import preguntar
+
+    with pytest.raises(InterpretacionNoDisponible):
+        preguntar("incompleta", 8, "nota", "proximo", interpretar=interprete_falso,
+                  responder=lambda e: {"respuesta": "no deberia llegar"})

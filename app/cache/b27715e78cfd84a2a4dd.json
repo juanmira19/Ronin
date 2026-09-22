@@ -1,0 +1,16 @@
+{
+  "clave": "b27715e78cfd84a2a4dd",
+  "nota": "Senti dolor fuerte en la rodilla desde la mitad del partido.",
+  "esfuerzo_percibido": 9,
+  "interpretacion": {
+    "lectura_sesion": "Dijiste que sentiste dolor fuerte en la rodilla desde la mitad del partido; tu reloj muestra que mantuviste la intensidad pero la recuperación empeoró al final, lo que no confirma ni descarta el dolor. Eso suele notarse cuando el cuerpo pierde fuerza en los esfuerzos finales y aparece molestia. No juegues hasta que un profesional revise esa rodilla.",
+    "recomendacion_semana": "Enfócate en recuperación y revisión médica; evita entrenamientos intensos hasta que te autoricen volver a la cancha.",
+    "alertas": [
+      {
+        "tipo": "molestia_fisica",
+        "mensaje": "Dolor fuerte en la rodilla reportado desde la mitad del juego.",
+        "severidad": "alta"
+      }
+    ]
+  }
+}

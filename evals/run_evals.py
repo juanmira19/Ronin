@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CASES_PATH = ROOT / "evals" / "eval_cases.json"
 RESULTS_PATH = ROOT / "evals" / "results.md"
 
-PERFIL = {"nombre": "jugador_anonimo", "fc_max": 192, "posicion": "cutter"}
+PERFIL = {"nombre": "jugador_anonimo", "fc_max": 192}
 HISTORIAL = [
     {"fecha": "2026-07-30", "pico_pct": -6.0, "recuperacion_pct": 8.0},
     {"fecha": "2026-08-06", "pico_pct": -4.2, "recuperacion_pct": 5.5},
