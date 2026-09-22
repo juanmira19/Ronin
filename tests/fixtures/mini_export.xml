@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HealthData locale="es_CO">
+  <Workout workoutActivityType="HKWorkoutActivityTypeCycling" duration="30.0" durationUnit="min" sourceName="Test Watch" sourceVersion="10.3.1" creationDate="2026-01-01 08:30:00 -0500" startDate="2026-01-01 08:00:00 -0500" endDate="2026-01-01 08:30:00 -0500">
+    <MetadataEntry key="HKIndoorWorkout" value="0"/>
+  </Workout>
+  <Workout workoutActivityType="HKWorkoutActivityTypeRunning" duration="15.5" durationUnit="min" sourceName="Test Watch" sourceVersion="10.3.1" creationDate="2026-01-02 07:15:30 -0500" startDate="2026-01-02 07:00:00 -0500" endDate="2026-01-02 07:15:30 -0500">
+    <MetadataEntry key="HKIndoorWorkout" value="0"/>
+  </Workout>
+  <Workout workoutActivityType="HKWorkoutActivityTypeTraditionalStrengthTraining" duration="45.0" durationUnit="min" sourceName="Test Watch" sourceVersion="10.3.1" creationDate="2026-01-03 18:45:00 -0500" startDate="2026-01-03 18:00:00 -0500" endDate="2026-01-03 18:45:00 -0500"/>
+  <Workout workoutActivityType="HKWorkoutActivityTypeDiscSports" duration="60.0" durationUnit="min" sourceName="Test Watch" sourceVersion="26.0" creationDate="2026-01-04 17:00:00 -0500" startDate="2026-01-04 16:00:00 -0500" endDate="2026-01-04 17:00:00 -0500">
+    <MetadataEntry key="HKIndoorWorkout" value="0"/>
+  </Workout>
+  <Workout workoutActivityType="HKWorkoutActivityTypeWalking" duration="20.0" durationUnit="min" sourceName="Test Watch" sourceVersion="10.3.1" creationDate="2026-01-05 09:20:00 -0500" startDate="2026-01-05 09:00:00 -0500" endDate="2026-01-05 09:20:00 -0500"/>
+</HealthData>
