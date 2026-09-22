@@ -1,0 +1,16 @@
+{
+  "clave": "3d8d7c316fb5e5952c5d",
+  "nota": "Me dolió mucho el isquio en una jugada a la mitad del partido, aún me duele. Por eso le bajé\n",
+  "esfuerzo_percibido": 10,
+  "interpretacion": {
+    "lectura_sesion": "Perdiste intensidad en la segunda mitad y la recuperación empeoró hacia el final. Además, sentiste dolor fuerte en el isquio durante una jugada a la mitad del partido y sigue presente.",
+    "recomendacion_semana": "Prioriza sesiones de recuperación activa y trabajo específico de fuerza y flexibilidad de isquiotibiales. Reduce la carga de alta intensidad y enfócate en ejercicios de movilidad y estabilización antes de volver a entrenar a plena potencia.",
+    "alertas": [
+      {
+        "tipo": "molestia_fisica",
+        "mensaje": "Dolor persistente en el isquio reportado por el jugador.",
+        "severidad": "alta"
+      }
+    ]
+  }
+}
