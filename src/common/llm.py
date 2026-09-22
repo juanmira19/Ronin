@@ -14,11 +14,14 @@ _client = None
 
 def get_client():
     """Cliente Groq perezoso: solo exige GROQ_API_KEY cuando de verdad se llama al modelo,
-    no al importar el modulo (permite correr la capa deterministica sin credenciales)."""
+    no al importar el modulo (permite correr la capa deterministica sin credenciales).
+    Carga .env si existe, para no tener que exportar la variable en cada sesion de shell."""
     global _client
     if _client is None:
+        from dotenv import load_dotenv
         from groq import Groq
 
+        load_dotenv()
         api_key = os.getenv("GROQ_API_KEY")
         assert api_key, "Falta GROQ_API_KEY"
         _client = Groq(api_key=api_key)
