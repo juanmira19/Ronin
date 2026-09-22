@@ -11,6 +11,7 @@ from typing import Callable, Optional
 
 import numpy as np
 
+from app.lenguaje import frase_reloj, hallazgos
 from app.llm_cache import InterpretacionNoDisponible, interpretar as interpretar_cache
 from app.presets import ESCALA, HISTORIAL, NOTAS, PERFIL, SESIONES, ruta
 from src.common.constants import SAMPLE_DT
@@ -125,6 +126,9 @@ def analizar(sesion_id: str, rpe: int, nota: str, modo: str = "auto",
         "texto_descartado": detalle.get("texto_descartado", False),
     }
     base["fcmax"] = detalle.get("fcmax")
+    base["frase_reloj"] = frase_reloj(base["reloj"])
+    base["hallazgos"] = (hallazgos(detalle["metricas"], detalle.get("calidad"))
+                         if detalle.get("metricas") else [])
     base["fuente_interpretacion"] = detalle.get("fuente_interpretacion")
     base["interpretacion_disponible"] = interpretacion_disponible
     base["motivo_sin_interpretacion"] = motivo_sin_interpretacion

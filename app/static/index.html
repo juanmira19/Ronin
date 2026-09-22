@@ -4,325 +4,211 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%237c5cff%27/%3E%3Cpath d=%27M5 22 L11 22 L11 12 L16 12 L16 22 L21 22 L21 9 L27 9%27 fill=%27none%27 stroke=%27white%27 stroke-width=%273%27/%3E%3C/svg%3E">
-<title>Ronin — análisis de deportes intermitentes</title>
+<title>Ronin</title>
 <style>
   :root{
-    --bg:#080b14; --panel:#0f1626; --panel-2:#141d31; --line:#1f2b45;
-    --txt:#e8edf7; --muted:#8b9ab5; --dim:#5d6c8a;
+    --bg:#07090f; --card:#111827; --card2:#161f33; --line:#242f49;
+    --txt:#eef2fa; --muted:#93a1bd; --dim:#5f6e8c;
     --bajo:#38bdf8; --moderado:#fbbf24; --maximo:#f43f5e;
     --ok:#34d399; --warn:#fbbf24; --bad:#f43f5e; --accent:#7c5cff;
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--txt);
-       font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;}
-  header{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;
-         padding:18px 28px;border-bottom:1px solid var(--line);background:var(--panel)}
-  header h1{margin:0;font-size:22px;letter-spacing:.22em;font-weight:700}
-  header .tag{color:var(--muted);font-size:13px}
-  header .modo{margin-left:auto;font-size:12px;color:var(--dim);
-               border:1px solid var(--line);border-radius:999px;padding:4px 12px}
-  main{display:grid;grid-template-columns:300px 1fr;gap:22px;padding:22px 28px;max-width:1500px}
-  @media (max-width:1000px){main{grid-template-columns:1fr}}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
-  .card h2{margin:0 0 14px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
-  .sesion{width:100%;text-align:left;background:var(--panel-2);border:1px solid var(--line);
-          color:var(--txt);border-radius:10px;padding:11px 13px;margin-bottom:9px;cursor:pointer;
-          transition:border-color .15s,background .15s}
-  .sesion:hover{border-color:var(--accent)}
-  .sesion.on{border-color:var(--accent);background:#1b1836}
-  .sesion b{display:block;font-size:14px}
-  .sesion span{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
-  .sesion .origen{display:inline-block;margin-top:6px;font-size:10px;letter-spacing:.08em;
-                  text-transform:uppercase;border-radius:4px;padding:2px 6px;background:#243050;color:var(--muted)}
-  .sesion .origen.real{background:#123a2c;color:var(--ok)}
-  .sesion .meta{display:flex;justify-content:space-between;align-items:center;margin-top:6px;gap:8px}
-  .sesion .fecha{font-size:11.5px;color:var(--txt);opacity:.8}
-  .sesion .llegada{font-size:10.5px;color:var(--dim)}
-  .escala{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-  .op{background:var(--panel-2);border:1px solid var(--line);color:var(--txt);border-radius:9px;
-      padding:9px 8px;cursor:pointer;text-align:left;transition:border-color .15s,background .15s}
+       font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif}
+  .wrap{max-width:720px;margin:0 auto;padding:22px 20px 60px}
+  header{display:flex;align-items:baseline;gap:12px;margin-bottom:22px}
+  header h1{margin:0;font-size:19px;letter-spacing:.24em;font-weight:700}
+  header span{font-size:12.5px;color:var(--dim)}
+
+  /* bandeja */
+  .bandeja{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:18px}
+  .ses{flex:0 0 auto;background:var(--card);border:1px solid var(--line);color:var(--txt);
+       border-radius:11px;padding:9px 13px;cursor:pointer;text-align:left;transition:.15s}
+  .ses:hover{border-color:var(--accent)}
+  .ses.on{border-color:var(--accent);background:#1c1a38}
+  .ses b{display:block;font-size:13.5px;font-weight:600}
+  .ses span{display:block;font-size:11px;color:var(--dim);margin-top:1px}
+
+  /* tu respuesta */
+  .resp{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px 16px;margin-bottom:22px}
+  .resp h2{margin:0 0 11px;font-size:13.5px;color:var(--muted);font-weight:600}
+  .ops{display:flex;gap:7px;flex-wrap:wrap}
+  .op{flex:1 1 0;min-width:88px;background:var(--card2);border:1px solid var(--line);color:var(--txt);
+      border-radius:10px;padding:9px 6px;cursor:pointer;text-align:center;transition:.15s}
   .op:hover{border-color:var(--accent)}
-  .op.on{border-color:var(--accent);background:#1b1836}
-  .op b{display:block;font-size:13.5px}
-  .op span{display:block;font-size:10.5px;color:var(--muted);margin-top:1px;line-height:1.3}
-  .equiv{font-size:11px;color:var(--dim);margin-top:7px}
-  label.lbl{display:block;font-size:12px;color:var(--muted);margin:16px 0 7px;letter-spacing:.06em}
-  input[type=range]{width:100%;accent-color:var(--accent)}
-  .rpe{display:flex;justify-content:space-between;font-size:12px;color:var(--dim)}
-  .rpe b{color:var(--txt);font-size:20px}
-  textarea{width:100%;min-height:74px;resize:vertical;background:var(--panel-2);color:var(--txt);
-           border:1px solid var(--line);border-radius:9px;padding:9px;font:inherit;font-size:13.5px}
+  .op.on{border-color:var(--accent);background:#221f42}
+  .op b{display:block;font-size:14px}
+  .op span{display:block;font-size:10.5px;color:var(--muted);margin-top:1px}
+  textarea{width:100%;min-height:54px;resize:vertical;background:var(--card2);color:var(--txt);
+           border:1px solid var(--line);border-radius:10px;padding:9px 11px;font:inherit;font-size:14px;margin-top:11px}
   .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
-  .chip{font-size:11.5px;border:1px solid var(--line);background:transparent;color:var(--muted);
+  .chip{font-size:11.5px;border:1px solid var(--line);background:transparent;color:var(--dim);
         border-radius:999px;padding:4px 10px;cursor:pointer}
   .chip:hover{border-color:var(--accent);color:var(--txt)}
-  .go{width:100%;margin-top:18px;padding:12px;border:0;border-radius:10px;background:var(--accent);
-      color:#fff;font-weight:650;font-size:15px;cursor:pointer;letter-spacing:.03em}
-  .go:disabled{opacity:.5;cursor:wait}
-  .vs{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-  @media (max-width:760px){.vs{grid-template-columns:1fr}}
-  .vs .card{margin:0}
-  .vs .reloj{border-color:#2a3350}
-  .vs .ronin{border-color:var(--accent);box-shadow:0 0 0 1px rgba(124,92,255,.18)}
-  .stats{display:flex;flex-wrap:wrap;gap:20px 26px}
-  .stat b{display:block;font-size:25px;font-weight:700;letter-spacing:-.02em;line-height:1.15}
-  .stat span{font-size:11px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase}
-  .veredicto{margin-top:14px;font-size:12.5px;color:var(--dim);border-top:1px dashed var(--line);padding-top:10px}
-  .badges{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
-  .badge{font-size:11.5px;border-radius:999px;padding:4px 11px;border:1px solid var(--line);color:var(--muted)}
-  .badge.ok{border-color:#1d6b52;background:#0d2a21;color:var(--ok)}
-  .badge.warn{border-color:#6b5520;background:#2a2109;color:var(--warn)}
-  .badge.bad{border-color:#6b2230;background:#2a0d13;color:var(--bad)}
-  .leyenda{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:8px}
-  .sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
-  .lectura{font-size:17px;line-height:1.55}
-  .reco{margin-top:12px;padding:12px 14px;background:var(--panel-2);border-left:3px solid var(--accent);border-radius:0 9px 9px 0;font-size:14.5px}
-  .alerta{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:9px;margin-top:8px;font-size:13.5px;background:var(--panel-2);border-left:3px solid var(--dim)}
-  .alerta.alta{border-left-color:var(--bad)} .alerta.atencion{border-left-color:var(--warn)} .alerta.info{border-left-color:var(--bajo)}
-  .alerta code{font-size:11px;color:var(--dim);display:block}
-  .rechazo{border-color:var(--bad)}
-  .rechazo h2{color:var(--bad)}
-  .rechazo ul{margin:0;padding-left:20px}
-  .rechazo li{margin-bottom:6px}
-  .nota-pie{font-size:12.5px;color:var(--dim);margin-top:12px}
-  details{margin-top:18px}
-  summary{cursor:pointer;color:var(--muted);font-size:12.5px}
-  pre{background:#060912;border:1px solid var(--line);border-radius:9px;padding:14px;overflow:auto;
-      font-size:11.5px;color:#9fb3d9;max-height:340px}
-  .stack{display:flex;flex-direction:column;gap:18px}
-  .hint{color:var(--dim);font-size:12.5px;margin-top:10px}
+
+  /* lectura */
+  .lectura{font-size:25px;line-height:1.45;letter-spacing:-.01em;margin:0 0 6px}
+  .firma{font-size:12px;color:var(--dim);margin:0 0 26px}
+  .cargando{color:var(--dim);font-size:16px}
+
+  .hallazgos{border-top:1px solid var(--line);margin-bottom:26px}
+  .h{display:flex;gap:13px;align-items:flex-start;padding:13px 0;border-bottom:1px solid var(--line)}
+  .h .pt{flex:0 0 7px;height:7px;border-radius:50%;background:var(--accent);margin-top:9px}
+  .h b{display:block;font-size:17px;font-weight:600;line-height:1.35}
+  .h span{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+
+  .reco{background:var(--card);border:1px solid var(--accent);border-radius:14px;padding:16px 18px;margin-bottom:18px}
+  .reco h3{margin:0 0 5px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+  .reco p{margin:0;font-size:16.5px;line-height:1.5}
+
+  .al{border-radius:12px;padding:13px 15px;margin-bottom:10px;font-size:15px;border:1px solid var(--line);background:var(--card)}
+  .al.alta{border-color:#6b2230;background:#220d12}
+  .al.atencion{border-color:#6b5520}
+  .al b{display:block;margin-bottom:2px}
+  .al i{font-style:normal;font-size:12.5px;color:var(--muted)}
+
+  .reloj{border-left:2px solid var(--line);padding:2px 0 2px 14px;margin:24px 0;font-size:14px;color:var(--muted)}
+  .reloj b{color:var(--txt);font-weight:600;display:block;font-size:15px}
+
+  details{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+  summary{cursor:pointer;color:var(--muted);font-size:13.5px;list-style:none}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"▸ ";color:var(--dim)}
+  details[open] summary::before{content:"▾ "}
+  pre{background:#04060c;border:1px solid var(--line);border-radius:10px;padding:13px;overflow:auto;
+      font-size:11.5px;color:#9fb3d9;max-height:320px}
+  .leyenda{display:flex;gap:15px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:8px}
+  .sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+
+  .rechazo{background:var(--card);border:1px solid var(--bad);border-radius:14px;padding:18px 20px;margin-bottom:20px}
+  .rechazo h3{margin:0 0 10px;font-size:19px;color:var(--bad)}
+  .rechazo ul{margin:0;padding-left:20px;color:var(--muted);font-size:14.5px}
+  .rechazo li{margin-bottom:5px}
 </style>
 </head>
 <body>
-<header>
-  <h1>RONIN</h1>
-  <span class="tag">Tu reloj promedia. Nosotros segmentamos.</span>
-  <span class="modo" id="modo">—</span>
-</header>
+<div class="wrap">
+  <header><h1>RONIN</h1><span id="sub">—</span></header>
 
-<main>
-  <aside class="card" style="align-self:start">
-    <h2>Tus sesiones</h2>
-    <div id="sesiones"></div>
+  <div class="bandeja" id="bandeja"></div>
 
-    <label class="lbl">¿Cómo te sentiste?</label>
-    <div class="escala" id="escala"></div>
-    <div class="equiv" id="equiv"></div>
-
-    <label class="lbl">¿Algo que contar? (opcional)</label>
-    <textarea id="nota">Me senti fuerte al inicio y me costo recuperar al final.</textarea>
+  <div class="resp">
+    <h2>¿Cómo te sentiste?</h2>
+    <div class="ops" id="ops"></div>
+    <textarea id="nota" placeholder="¿Algo que contar? (opcional)">Me senti fuerte al inicio y me costo recuperar al final.</textarea>
     <div class="chips" id="chips"></div>
+  </div>
 
-    <button class="go" id="go">Analizar sesión</button>
-    <p class="hint" id="hint"></p>
-  </aside>
-
-  <section class="stack" id="salida"></section>
-</main>
+  <div id="salida"><p class="cargando">Analizando…</p></div>
+</div>
 
 <script>
 const $ = s => document.querySelector(s);
-let CAT = null, SESION = "partido", RPE = 8;
-
-const fmt = (v, suf="") => (v===null||v===undefined) ? "—" : v+suf;
+let CAT=null, SESION="partido", RPE=8;
 const esc = s => String(s??"").replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 
-async function cargarCatalogo(){
+async function cargar(){
   CAT = await (await fetch("/api/catalogo")).json();
-  $("#modo").textContent = "modo: " + CAT.modo;
-  $("#sesiones").innerHTML = CAT.sesiones.map(s => `
-    <button class="sesion ${s.id===SESION?"on":""}" data-id="${s.id}">
-      <b>${esc(s.titulo)}</b><span>${esc(s.subtitulo)}</span>
-      <div class="meta"><span class="fecha">${esc(s.fecha||"")}</span>
-        <span class="llegada">${esc(s.llegada||"")}</span></div>
-      <span class="origen ${s.origen}">${s.origen==="real"?"dato real":"sintético"}</span>
-    </button>`).join("");
-  pintarEscala();
-  $("#sesiones").querySelectorAll(".sesion").forEach(b =>
-    b.onclick = () => { SESION = b.dataset.id;
-      $("#sesiones").querySelectorAll(".sesion").forEach(x=>x.classList.toggle("on", x===b));
-      analizar(); });
-  $("#chips").innerHTML = CAT.notas.map(n =>
+  $("#bandeja").innerHTML = CAT.sesiones.map(s=>`
+    <button class="ses ${s.id===SESION?"on":""}" data-id="${s.id}">
+      <b>${esc(s.titulo)}</b><span>${esc(s.fecha||"")} · ${esc(s.llegada||"")}</span></button>`).join("");
+  $("#bandeja").querySelectorAll(".ses").forEach(b=>b.onclick=()=>{SESION=b.dataset.id;
+    $("#bandeja").querySelectorAll(".ses").forEach(x=>x.classList.toggle("on",x===b));analizar();});
+  $("#chips").innerHTML = CAT.notas.map(n=>
     `<button class="chip" data-t="${esc(n.texto)}" data-r="${n.rpe}">${esc(n.etiqueta)}</button>`).join("");
-  $("#chips").querySelectorAll(".chip").forEach(c =>
-    c.onclick = () => { $("#nota").value = c.dataset.t; RPE = +c.dataset.r;
-      pintarEscala(); analizar(); });
+  $("#chips").querySelectorAll(".chip").forEach(c=>c.onclick=()=>{
+    $("#nota").value=c.dataset.t; RPE=+c.dataset.r; ops(); analizar();});
+  ops();
 }
 
-function pintarEscala(){
-  const cerca = CAT.escala.reduce((a,b) => Math.abs(b.rpe-RPE) < Math.abs(a.rpe-RPE) ? b : a);
-  $("#escala").innerHTML = CAT.escala.map(o =>
+function ops(){
+  const cerca = CAT.escala.reduce((a,b)=>Math.abs(b.rpe-RPE)<Math.abs(a.rpe-RPE)?b:a);
+  $("#ops").innerHTML = CAT.escala.map(o=>
     `<button class="op ${o.id===cerca.id?"on":""}" data-r="${o.rpe}">
        <b>${esc(o.etiqueta)}</b><span>${esc(o.detalle)}</span></button>`).join("");
-  $("#escala").querySelectorAll(".op").forEach(b =>
-    b.onclick = () => { RPE = +b.dataset.r; pintarEscala(); analizar(); });
-  $("#equiv").textContent = "el sistema lo traduce a " + RPE + "/10 para comparar con la carga medida";
+  $("#ops").querySelectorAll(".op").forEach(b=>b.onclick=()=>{RPE=+b.dataset.r;ops();analizar();});
 }
-
-$("#go").onclick = () => analizar();
 
 async function analizar(){
-  const btn = $("#go"); btn.disabled = true; btn.textContent = "Analizando…";
-  $("#hint").textContent = "";
+  $("#salida").innerHTML = `<p class="cargando">Analizando tu sesión…</p>`;
   try{
-    const r = await fetch("/api/analizar", {method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({sesion_id:SESION, esfuerzo_percibido:RPE, nota:$("#nota").value})});
+    const r = await fetch("/api/analizar",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({sesion_id:SESION,esfuerzo_percibido:RPE,nota:$("#nota").value})});
     pintar(await r.json());
-  }catch(e){ $("#hint").textContent = "Error de red: " + e.message; }
-  btn.disabled = false; btn.textContent = "Analizar sesión";
+  }catch(e){ $("#salida").innerHTML = `<p class="cargando">No se pudo conectar: ${esc(e.message)}</p>`; }
 }
 
-/* ---------- gráfica ---------- */
 function grafica(g, fcMax){
-  const W=1000, H=270, PL=44, PR=14, PT=14, PB=26;
-  const dur = g.duracion_seg || 1;
-  const fcs = g.fc.filter(v=>!isNaN(v));
-  const lo = Math.max(40, Math.min(...fcs)-6), hi = Math.max(...fcs, fcMax*0.82)+6;
-  const X = t => PL + (t/dur)*(W-PL-PR);
-  const Y = f => PT + (1-(f-lo)/(hi-lo))*(H-PT-PB);
-  const color = {bajo:"var(--bajo)", moderado:"var(--moderado)", maximo:"var(--maximo)"};
-
-  const bloques = (g.bloques||[]).map(b =>
-    `<rect x="${X(b.inicio_seg).toFixed(1)}" y="${PT}" width="${Math.max(1.5,(X(b.fin_seg)-X(b.inicio_seg))).toFixed(1)}"
-       height="${H-PT-PB}" fill="${color[b.intensidad]}" opacity=".17"></rect>`).join("");
-
-  const linea = g.t.map((t,i)=> `${X(t).toFixed(1)},${Y(g.fc[i]).toFixed(1)}`).join(" ");
-  const umbral = fcMax*0.80;
-  const mitad = dur/2;
-  const ticks = [0,.25,.5,.75,1].map(f=>{
-    const t=dur*f; return `<text x="${X(t)}" y="${H-7}" fill="var(--dim)" font-size="11" text-anchor="middle">${Math.round(t/60)}′</text>`;
-  }).join("");
-  const ejeY = [lo, (lo+hi)/2, hi].map(f =>
-    `<text x="${PL-8}" y="${Y(f)+4}" fill="var(--dim)" font-size="11" text-anchor="end">${Math.round(f)}</text>
-     <line x1="${PL}" y1="${Y(f)}" x2="${W-PR}" y2="${Y(f)}" stroke="var(--line)" stroke-width="1"/>`).join("");
-
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block">
-    ${ejeY}${bloques}
-    <line x1="${PL}" y1="${Y(umbral)}" x2="${W-PR}" y2="${Y(umbral)}" stroke="var(--maximo)"
-          stroke-width="1" stroke-dasharray="5 4" opacity=".65"/>
-    <line x1="${X(mitad)}" y1="${PT}" x2="${X(mitad)}" y2="${H-PB}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 5" opacity=".6"/>
-    <text x="${X(mitad)+6}" y="${PT+13}" fill="var(--muted)" font-size="11">mitad de la sesión</text>
-    <polyline points="${linea}" fill="none" stroke="#e8edf7" stroke-width="1.6" stroke-linejoin="round"/>
-    ${ticks}
+  const W=920,H=200,PL=8,PR=8,PT=10,PB=18, dur=g.duracion_seg||1;
+  const fcs=g.fc.filter(v=>!isNaN(v));
+  const lo=Math.min(...fcs)-5, hi=Math.max(...fcs)+5;
+  const X=t=>PL+(t/dur)*(W-PL-PR), Y=f=>PT+(1-(f-lo)/(hi-lo))*(H-PT-PB);
+  const col={bajo:"var(--bajo)",moderado:"var(--moderado)",maximo:"var(--maximo)"};
+  const blo=(g.bloques||[]).map(b=>`<rect x="${X(b.inicio_seg).toFixed(1)}" y="${PT}"
+      width="${Math.max(1.5,X(b.fin_seg)-X(b.inicio_seg)).toFixed(1)}" height="${H-PT-PB}"
+      fill="${col[b.intensidad]}" opacity=".18"></rect>`).join("");
+  const li=g.t.map((t,i)=>`${X(t).toFixed(1)},${Y(g.fc[i]).toFixed(1)}`).join(" ");
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block">${blo}
+    <line x1="${PL}" y1="${Y(fcMax*0.8)}" x2="${W-PR}" y2="${Y(fcMax*0.8)}" stroke="var(--maximo)"
+      stroke-width="1" stroke-dasharray="5 4" opacity=".55"/>
+    <polyline points="${li}" fill="none" stroke="#eef2fa" stroke-width="1.5"/>
+    <text x="${PL}" y="${H-4}" fill="var(--dim)" font-size="11">inicio</text>
+    <text x="${W-PR}" y="${H-4}" fill="var(--dim)" font-size="11" text-anchor="end">${Math.round(dur/60)} min</text>
   </svg>
   <div class="leyenda">
-    <span><i class="sw" style="background:var(--bajo)"></i>bloque bajo (&lt;85% FCmax)</span>
-    <span><i class="sw" style="background:var(--moderado)"></i>moderado (85–92%)</span>
-    <span><i class="sw" style="background:var(--maximo)"></i>máximo (&gt;92%)</span>
-    <span>línea blanca: frecuencia cardíaca</span>
-    <span><i class="sw" style="background:transparent;border-top:2px dashed var(--maximo);height:0;width:14px"></i>umbral 80% FCmax (${Math.round(umbral)} ppm)</span>
-    <span>franja sombreada = bloque de esfuerzo detectado</span>
+    <span><i class="sw" style="background:var(--bajo)"></i>esfuerzo bajo</span>
+    <span><i class="sw" style="background:var(--moderado)"></i>moderado</span>
+    <span><i class="sw" style="background:var(--maximo)"></i>máximo</span>
+    <span>cada franja es un esfuerzo detectado</span>
   </div>`;
 }
 
-/* ---------- render ---------- */
 function pintar(d){
-  const out = [];
-  const r = d.reloj, m = d.metricas, s = d.salida;
-  if(d.fcmax) $("#modo").textContent = "modo: " + CAT.modo + " · FCmax " + Math.round(d.fcmax.fc_max)
-    + " ppm " + (d.fcmax.fuente==="observada" ? "(medida, "+d.fcmax.sesiones+" sesiones)" : "(declarada)");
+  $("#sub").textContent = d.sesion.titulo.toLowerCase() + " · " + (d.sesion.fecha||"");
+  const out=[], s=d.salida;
 
-  /* 1. contraste */
-  const statReloj = [
-    ["distancia_km" in r ? r.distancia_km.toFixed(2)+" km" : "—", "distancia"],
-    [r.ritmo_medio ? r.ritmo_medio+" /km" : "—", "ritmo medio"],
-    [r.fc_media+" ppm", "FC media"],
-    [r.duracion_min+" min", "duración"],
-  ];
-  const statRonin = m ? [
-    [m.bloques_esfuerzo.cantidad, "bloques de esfuerzo"],
-    [m.bloques_esfuerzo.duracion_media_seg+" s", "duración media"],
-    [(m.degradacion.pico_pct>0?"+":"")+m.degradacion.pico_pct+"%", "pico 2ª mitad"],
-    [(m.degradacion.recuperacion_pct>0?"+":"")+m.degradacion.recuperacion_pct+"%", "recuperación peor"],
-  ] : null;
-
-  out.push(`<div class="vs">
-    <div class="card reloj">
-      <h2>Lo que dice tu reloj</h2>
-      <div class="stats">${statReloj.map(([v,k])=>`<div class="stat"><b>${v}</b><span>${k}</span></div>`).join("")}</div>
-      <div class="veredicto">Promedios sobre toda la sesión. No distinguen un sprint de una caminata.
-      ${r.fuente_distancia==="integrada" ? " Distancia integrada de la velocidad GPS." : ""}</div>
-    </div>
-    <div class="card ronin">
-      <h2>Lo que ve Ronin</h2>
-      ${statRonin
-        ? `<div class="stats">${statRonin.map(([v,k])=>`<div class="stat"><b>${v}</b><span>${k}</span></div>`).join("")}</div>
-           <div class="veredicto">${esc(m.conclusiones.pico)} · ${esc(m.conclusiones.recuperacion)}</div>`
-        : `<div class="stats">
-             <div class="stat"><b style="color:var(--bad)">${(d.grafica.bloques||[]).length}</b><span>bloques detectados</span></div>
-             <div class="stat"><b>2</b><span>mínimo para analizar</span></div>
-             <div class="stat"><b style="color:var(--bad)">—</b><span>degradación</span></div>
-           </div>
-           <div class="veredicto" style="color:var(--bad)">
-             Ronin no analiza esta sesión: no hay suficientes esfuerzos distintos que comparar.
-             Abajo dice exactamente por qué.</div>`}
-    </div>
-  </div>`);
-
-  /* 2. gráfica */
-  out.push(`<div class="card">
-    <h2>Serie de frecuencia cardíaca y bloques detectados</h2>
-    ${grafica(d.grafica, (d.fcmax && d.fcmax.fc_max) || 192)}
-  </div>`);
-
-  /* 3. rechazo o interpretación */
-  if(d.estado === "rechazada"){
-    out.push(`<div class="card rechazo">
-      <h2>Sesión rechazada — etapa: ${esc(d.etapa_fallida||"—")}</h2>
-      <ul>${s.error.map(e=>`<li>${esc(e)}</li>`).join("")}</ul>
-      <p class="nota-pie">El sistema se detiene <b>antes</b> de llamar al modelo: sin bloques válidos
-      no hay cifras que interpretar, y prefiere decirlo a inventarlas.</p>
-    </div>`);
-  } else if(d.estado === "sin_interpretacion"){
-    out.push(`<div class="card rechazo">
-      <h2>Interpretación no disponible</h2>
-      <p>${esc(d.motivo_sin_interpretacion)}</p>
-      <p class="nota-pie">Las métricas de arriba sí se calcularon: son determinísticas y no dependen del modelo.
-      No se muestra un texto inventado para tapar el hueco.</p>
-    </div>`);
+  if(d.estado==="rechazada"){
+    out.push(`<div class="rechazo"><h3>Esta sesión no la puedo leer</h3>
+      <ul>${s.error.map(e=>`<li>${esc(e)}</li>`).join("")}</ul></div>
+      <p class="firma">Prefiero decírtelo a inventarte un análisis que parezca sólido y no lo sea.</p>`);
+  } else if(d.estado==="sin_interpretacion"){
+    out.push(`<div class="rechazo"><h3>Medí tu sesión, pero no pude redactarla</h3>
+      <p style="color:var(--muted);margin:0;font-size:14.5px">${esc(d.motivo_sin_interpretacion)}</p></div>`);
+    (d.hallazgos||[]).length && out.push(hallazgosHTML(d));
   } else {
-    const badges = [];
-    const conf = m.bloques_esfuerzo.confianza;
-    badges.push(`<span class="badge ${conf==="alta"?"ok":conf==="media"?"warn":"bad"}">confianza de segmentación: ${conf}</span>`);
-    if(d.fcmax) badges.push(`<span class="badge">FCmax ${Math.round(d.fcmax.fc_max)} ppm · ${d.fcmax.fuente==="observada"
-      ? "medida en tus "+d.fcmax.sesiones+" sesiones" : "declarada"}${d.fcmax.provisional?" (calibrando)":""}</span>`);
-    badges.push(d.verificacion.texto_descartado
-      ? `<span class="badge bad">verificación de cifras: texto descartado</span>`
-      : `<span class="badge ok">verificación de cifras: sin cifras ajenas</span>`);
-    badges.push(`<span class="badge ${d.fuente_interpretacion==="modelo"?"":"warn"}">texto: ${d.fuente_interpretacion==="modelo"?"modelo en vivo":"caché"}</span>`);
-    badges.push(`<span class="badge">percepción: ${esc(s.divergencia_percepcion)}</span>`);
-    badges.push(s.requiere_revision
-      ? `<span class="badge bad">requiere revisión humana</span>`
-      : `<span class="badge ok">no requiere revisión</span>`);
-    if(s.comparacion_historial)
-      badges.push(`<span class="badge">vs. historial (${s.comparacion_historial.sesiones_comparadas}): ${esc(s.comparacion_historial.direccion)} en ${esc(s.comparacion_historial.dato_mas_movido)}</span>`);
-
-    out.push(`<div class="card">
-      <h2>Lectura de la sesión</h2>
-      <div class="badges">${badges.join("")}</div>
-      <p class="lectura">${esc(s.lectura_sesion)}</p>
-      <div class="reco"><b>Esta semana:</b> ${esc(s.recomendacion_semana)}</div>
-      ${s.alertas.length ? s.alertas.map(a=>`
-        <div class="alerta ${a.severidad}"><div><b>${esc(a.mensaje)}</b>
-        <code>${esc(a.tipo)} · severidad ${esc(a.severidad)}</code></div></div>`).join("")
-        : `<p class="nota-pie">Sin alertas.</p>`}
-      <p class="nota-pie">El modelo solo redactó estas frases. Los ocho campos del contrato, las cifras
-      y la decisión de <code>requiere_revision</code> los arma el sistema.</p>
-    </div>`);
+    const descartado = d.verificacion && d.verificacion.texto_descartado;
+    out.push(descartado
+      ? `<p class="lectura">Medí tu sesión, pero el resumen que escribí citaba cifras que yo no calculé, así que lo descarté. Abajo está lo que sí medí.</p>
+         <p class="firma">Prefiero quedarme corto a darte un número que no salió de tus datos.</p>`
+      : `<p class="lectura">${esc(s.lectura_sesion)}</p>
+         <p class="firma">Escrito por Ronin a partir de lo que midió tu reloj, con cada cifra verificada contra lo medido.</p>`);
+    out.push(hallazgosHTML(d));
+    out.push(`<div class="reco"><h3>Esta semana</h3><p>${esc(s.recomendacion_semana)}</p></div>`);
+    (s.alertas||[]).forEach(a=>out.push(
+      `<div class="al ${a.severidad}"><b>${esc(a.mensaje)}</b>${
+        a.severidad==="alta"?`<i>Vale la pena que alguien mire esto contigo antes de volver a jugar.</i>`:""}</div>`));
   }
 
-  /* 4. detalle */
-  out.push(`<div class="card">
-    <h2>Detalle técnico</h2>
-    <details><summary>Calidad de la segmentación</summary><pre>${esc(JSON.stringify(d.calidad,null,2))}</pre></details>
-    <details><summary>Salida completa del contrato</summary><pre>${esc(JSON.stringify(d.salida,null,2))}</pre></details>
-    <details><summary>contract_check</summary><pre>${esc(JSON.stringify(d.contract_check,null,2))}</pre></details>
-  </div>`);
+  out.push(`<div class="reloj"><b>Tu reloj decía: ${esc(d.frase_reloj)}</b>
+    Eso es todo lo que tenías antes de Ronin.</div>`);
+
+  if((d.grafica.bloques||[]).length || d.estado!=="rechazada")
+    out.push(`<details><summary>Ver la sesión completa</summary>
+      ${grafica(d.grafica,(d.fcmax&&d.fcmax.fc_max)||192)}</details>`);
+  out.push(`<details><summary>Detalle técnico</summary>
+    <pre>${esc(JSON.stringify({salida:d.salida,calidad:d.calidad,fcmax:d.fcmax,
+      verificacion:d.verificacion,fuente_texto:d.fuente_interpretacion},null,2))}</pre></details>`);
 
   $("#salida").innerHTML = out.join("");
 }
 
-cargarCatalogo().then(analizar);
+function hallazgosHTML(d){
+  return `<div class="hallazgos">${(d.hallazgos||[]).map(h=>
+    `<div class="h"><div class="pt"></div><div><b>${esc(h.titulo)}</b><span>${esc(h.detalle)}</span></div></div>`
+  ).join("")}</div>`;
+}
+
+cargar().then(analizar);
 </script>
 </body>
 </html>
