@@ -7,15 +7,21 @@ import re
 from src.common.constants import SAMPLE_DT
 
 
-def validar(df, rpe, tipo_sesion, fc_max, cobertura_min=0.90):
-    """Si algo falla, error explicito. No se procesa a medias."""
+def validar(df, rpe, tipo_sesion, fc_max, cobertura_min=0.90, fc_max_declarada=True):
+    """Si algo falla, error explicito. No se procesa a medias.
+
+    `fc_max_declarada`: cuando la FCmax del perfil se derivo de las sesiones del
+    propio jugador (ver src/perfil/fcmax.py), comparar la FC de esta sesion
+    contra ella no detecta nada — la FCmax sale de ahi mismo — y ademas dispara
+    un falso error, porque la derivada usa la FC suavizada y esta compara la
+    cruda. Solo tiene sentido cuando la cifra la declaro una persona."""
     errores = []
     dur = df["t"].iloc[-1] - df["t"].iloc[0]
     if dur / 60 < 15:
         errores.append(f"Sesion de {dur/60:.1f} min: minimo 15")
     if not (1 <= rpe <= 10):
         errores.append(f"Esfuerzo percibido {rpe} fuera del rango 1-10")
-    if df["fc"].max() > fc_max:
+    if fc_max_declarada and df["fc"].max() > fc_max:
         errores.append(f"FC maxima {df.fc.max():.0f} supera la del perfil ({fc_max})")
     cob = len(df) / (dur / SAMPLE_DT + 1)
     if cob < cobertura_min:
