@@ -1,0 +1,16 @@
+{
+  "clave": "c36693296c110e851f2f",
+  "nota": "Estuvo muy durísimo",
+  "esfuerzo_percibido": 10,
+  "interpretacion": {
+    "lectura_sesion": "Dijiste que estuvo muy durísimo: tu reloj lo confirma al haber mantenido la intensidad toda la sesión. Eso suele notarse como falta de chispa al final y una recuperación más lenta. En el próximo partido reserva energía para los últimos esfuerzos y elige cortes más cortos al final.",
+    "recomendacion_semana": "Prioriza entrenamientos de resistencia con intervalos y trabajo de recuperación activa para mejorar la capacidad de mantener la intensidad y acelerar la recuperación entre esfuerzos.",
+    "alertas": [
+      {
+        "tipo": "degradacion_alta",
+        "mensaje": "La recuperación empeoró hacia el final de la sesión.",
+        "severidad": "atencion"
+      }
+    ]
+  }
+}
