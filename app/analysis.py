@@ -13,10 +13,12 @@ import numpy as np
 
 from app.lenguaje import fecha_partido, frase_reloj, hallazgos, mitades
 from app.llm_cache import InterpretacionNoDisponible, interpretar as interpretar_cache
+from app.llm_cache import responder as responder_cache
 from app.presets import ESCALA, HISTORIAL, NOTAS, PERFIL, SESIONES, registrar_importada, ruta
 from src.common.constants import SAMPLE_DT
 from src.ingest.apple_health_xml import onboarding
 from src.ingest.health_auto_export import load_session
+from src.interpret.preguntas import PREGUNTAS, responder_pregunta
 from src.interpret.prototype import contract_check, run_prototype
 from src.metrics.session import por_mitad
 
@@ -155,9 +157,38 @@ def analizar(sesion_id: str, rpe: int, nota: str, modo: str = "auto",
     return base
 
 
+def _lectura_ya_mostrada(payload: dict, modo: str) -> dict:
+    """La pregunta se hace sobre la lectura que el jugador ya vio, que quedo en
+    cache al analizar. Regenerarla daria otro texto distinto al de la pantalla."""
+    try:
+        return interpretar_cache(payload, modo="cache")
+    except InterpretacionNoDisponible:
+        return interpretar_cache(payload, modo=modo)
+
+
+def preguntar(sesion_id: str, rpe: int, nota: str, pregunta_id: str, modo: str = "auto",
+              interpretar: Optional[Callable] = None, responder: Optional[Callable] = None) -> dict:
+    """Responde una pregunta sugerida sobre la sesion ya analizada. Vuelve a
+    correr el pipeline (determinístico, y la lectura sale de cache) para partir
+    exactamente del mismo paquete y las mismas cifras permitidas."""
+    sesion = SESIONES[sesion_id]
+    detalle: dict = {}
+    interpretar = interpretar or (lambda payload: _lectura_ya_mostrada(payload, modo))
+    responder = responder or (lambda entrada: responder_cache(entrada, modo=modo))
+    salida = run_prototype({"perfil": PERFIL, "serie": serie_de(sesion_id),
+                            "tipo_sesion": sesion["tipo_sesion"], "esfuerzo_percibido": rpe,
+                            "nota": nota, "historial": HISTORIAL},
+                           detalle=detalle, interpretar=interpretar)
+    if "error" in salida or detalle.get("texto_descartado"):
+        raise InterpretacionNoDisponible("Primero tiene que haber una lectura de esta sesion.")
+    return responder_pregunta(detalle["payload_modelo"], salida["lectura_sesion"], pregunta_id,
+                              detalle["cifras_permitidas"], responder=responder)
+
+
 def catalogo() -> dict:
     return {"sesiones": list(SESIONES.values()), "notas": NOTAS,
-            "escala": ESCALA, "perfil": PERFIL}
+            "escala": ESCALA, "perfil": PERFIL,
+            "preguntas": [{"id": k, "texto": v} for k, v in PREGUNTAS.items()]}
 
 
 def importar_export(path) -> dict:

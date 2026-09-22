@@ -19,7 +19,7 @@ IMPORTADAS = ROOT / "data" / "raw" / "importadas"
 # (src/perfil/fcmax.py). `fcmax_observadas` son las FC maximas suavizadas de sus
 # sesiones anteriores — en la demo son valores de ejemplo; en el producto las
 # escribe el propio pipeline cada vez que cierra una sesion.
-PERFIL = {"nombre": "jugador_demo", "posicion": "cutter",
+PERFIL = {"nombre": "jugador_demo",
           "fcmax_observadas": [181.2, 184.0, 186.4, 183.1, 185.0]}
 
 HISTORIAL = [

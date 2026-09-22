@@ -18,7 +18,9 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from app.analysis import analizar, catalogo, importar_export
+from app.analysis import analizar, catalogo, importar_export, preguntar
+from app.llm_cache import InterpretacionNoDisponible
+from src.interpret.preguntas import PREGUNTAS
 from app.presets import SESIONES
 
 STATIC = Path(__file__).resolve().parent / "static"
@@ -46,6 +48,25 @@ def post_analizar(peticion: PeticionAnalisis):
         raise HTTPException(404, f"Sesion desconocida: {peticion.sesion_id}")
     return analizar(peticion.sesion_id, peticion.esfuerzo_percibido,
                     peticion.nota, modo=peticion.modo or MODO_POR_DEFECTO)
+
+
+class PeticionPregunta(PeticionAnalisis):
+    pregunta_id: str = Field(..., description="id de una pregunta sugerida del catalogo")
+
+
+@app.post("/api/preguntar")
+def post_preguntar(peticion: PeticionPregunta):
+    if peticion.sesion_id not in SESIONES:
+        raise HTTPException(404, f"Sesion desconocida: {peticion.sesion_id}")
+    if peticion.pregunta_id not in PREGUNTAS:
+        raise HTTPException(404, f"Pregunta desconocida: {peticion.pregunta_id}")
+    try:
+        return {"disponible": True,
+                **preguntar(peticion.sesion_id, peticion.esfuerzo_percibido, peticion.nota,
+                            peticion.pregunta_id, modo=peticion.modo or MODO_POR_DEFECTO)}
+    except InterpretacionNoDisponible as exc:
+        # Sin modelo ni cache no se inventa la respuesta: la pagina lo dice.
+        return {"disponible": False, "motivo": str(exc)}
 
 
 @app.post("/api/onboarding")

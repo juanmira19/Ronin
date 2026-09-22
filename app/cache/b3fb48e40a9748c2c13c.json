@@ -1,0 +1,9 @@
+{
+  "clave": "b3fb48e40a9748c2c13c",
+  "nota": "Me senti super bien, no me canse nada.",
+  "esfuerzo_percibido": 3,
+  "pregunta": "¿Qué explica lo que pasó en mi partido?",
+  "respuesta": {
+    "respuesta": "Tu pulso mostró que mantuviste la intensidad durante toda la sesión, pero la caída de la recuperación al final indica que el cuerpo empezó a acumular fatiga aunque no lo sentiste. Es típico que, al no haber variación de velocidad en la señal, el reloj subestime el desgaste muscular, lo que puede explicar la diferencia entre tu percepción y los datos."
+  }
+}

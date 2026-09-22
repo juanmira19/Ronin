@@ -190,7 +190,8 @@ src/
   segment/   blocks (bloques), velocidad (señal), calidad (confianza)
   metrics/   session (degradación, recuperación, divergencia, historial)
   perfil/    fcmax (FCmax derivada de las sesiones del jugador)
-  interpret/ prototype (prompt, llamada al modelo, ensamblado del contrato)
+  interpret/ prototype (prompt, llamada al modelo, ensamblado del contrato),
+             preguntas (preguntas sugeridas despues de la lectura)
   verify/    validate (validación de entrada, verificación de cifras)
 app/         API FastAPI + página de la demo. NO contiene lógica de producto:
              presets, analysis (orquesta src/), lenguaje (métricas → frases),
@@ -226,6 +227,18 @@ Tres sesiones, tres comportamientos:
 
 Además, los partidos que se importan desde el zip (`POST /api/onboarding`)
 aparecen en la bandeja como sesiones reales.
+
+**Lo que aporta la IA** (lo que el código no puede): `lectura_sesion` cruza la
+nota del jugador con lo que midió el reloj (confirma o contradice), lo traduce a
+lo que suele pasar en la cancha como consecuencia probable (Ronin no ve las
+jugadas; nunca habla de posiciones: no se le pasan ni puede suponerlas) y
+propone una acción para el próximo partido. Va arriba, destacada.
+
+**Preguntas sugeridas** (`POST /api/preguntar`, `src/interpret/preguntas.py`):
+tres preguntas fijas, no chat libre. Parten del mismo paquete que la lectura
+(sin `CALIDAD_SEGMENTACION`, que inducía explicaciones inventadas), sobre la
+lectura ya mostrada, y se verifican contra las mismas `cifras_permitidas`. El
+chat libre queda pendiente: exige guardrails por turno y sus evals.
 
 Cuatro notas predefinidas, textuales de `evals/eval_cases.json`, que disparan
 los guardrails en vivo. Verificado: la nota normal no levanta alerta y las

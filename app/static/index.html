@@ -81,6 +81,19 @@
   .mit span{font-size:12.5px;color:var(--muted)}
   .nota-conf{font-size:13px;color:var(--muted);margin:-14px 0 24px}
 
+  /* preguntas */
+  .preg{margin:-12px 0 28px}
+  .preg-ops{display:flex;flex-wrap:wrap;gap:7px}
+  .pq{background:transparent;border:1px solid var(--accent);color:var(--txt);border-radius:999px;
+      padding:6px 13px;font:inherit;font-size:13px;cursor:pointer}
+  .pq:hover{background:#1c1a38}
+  .pq:disabled{opacity:.4;cursor:default}
+  .resp-ia{margin-top:10px}
+  .burbuja{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 14px;margin-top:8px}
+  .burbuja i{display:block;font-style:normal;font-size:12px;color:var(--accent);margin-bottom:3px}
+  .burbuja p{margin:0;font-size:15.5px;line-height:1.5}
+  .burbuja.sin p{color:var(--muted);font-size:14px}
+
   /* lectura */
   .ve{border-left:3px solid var(--accent);padding:4px 0 4px 18px;margin-bottom:28px}
   .ve .sec{color:var(--accent)}
@@ -178,7 +191,7 @@ function elegir(id){
 
 // Nada se analiza hasta que el jugador lo pide: cambiar la sesion, la sensacion
 // o la nota solo marca como vieja la lectura que ya esta en pantalla.
-let ANALIZADO=false;
+let ANALIZADO=false, ULTIMA=null;
 function cambio(){
   if(!ANALIZADO) return;
   $("#salida").classList.add("viejo");
@@ -228,8 +241,10 @@ async function analizar(){
   $("#salida").classList.remove("viejo");
   $("#salida").innerHTML = `<p class="cargando">Analizando tu sesión…</p>`;
   try{
+    // Las preguntas se hacen sobre ESTA lectura, aunque despues cambie la seleccion.
+    ULTIMA = {sesion_id:SESION,esfuerzo_percibido:RPE,nota:$("#nota").value};
     const r = await fetch("/api/analizar",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({sesion_id:SESION,esfuerzo_percibido:RPE,nota:$("#nota").value})});
+      body:JSON.stringify(ULTIMA)});
     pintar(await r.json());
     ANALIZADO=true;
   }catch(e){ $("#salida").innerHTML = `<p class="cargando">No se pudo conectar: ${esc(e.message)}</p>`; }
@@ -296,8 +311,11 @@ function pintar(d){
       ? `<p class="lectura">Lo que escribí citaba cifras que yo no calculé, así que lo descarté. Abajo está lo que sí medí.</p>
          <p class="firma" style="margin:0">Prefiero quedarme corto a darte un número que no salió de tus datos.</p>`
       : `<p class="lectura">${esc(s.lectura_sesion)}</p>
-         <p class="firma" style="margin:0">La IA de Ronin cruzó lo que nos contaste con lo que midió tu reloj${
-           d.perfil&&d.perfil.posicion?` y lo llevó a tu juego como ${esc(d.perfil.posicion)}`:""}. Cada cifra, verificada.</p>`}</div>`);
+         <p class="firma" style="margin:0">La IA de Ronin cruzó lo que nos contaste con lo que midió tu reloj. Cada cifra, verificada.</p>`}</div>`);
+    descartado || out.push(`<div class="preg"><p class="sec">Pregúntale a Ronin</p>
+      <div class="preg-ops">${(CAT.preguntas||[]).map(q=>
+        `<button class="pq" data-q="${esc(q.id)}">${esc(q.texto)}</button>`).join("")}</div>
+      <div class="resp-ia" id="resp-ia"></div></div>`);
     partido();
     out.push(`<div class="reco"><h3>Esta semana</h3><p>${esc(s.recomendacion_semana)}</p></div>`);
     (s.alertas||[]).forEach(a=>out.push(
@@ -313,6 +331,25 @@ function pintar(d){
       verificacion:d.verificacion,fuente_texto:d.fuente_interpretacion},null,2))}</pre></details>`);
 
   $("#salida").innerHTML = out.join("");
+  document.querySelectorAll(".pq").forEach(b=>b.onclick=()=>preguntar(b));
+}
+
+async function preguntar(boton){
+  boton.disabled=true;
+  const caja=document.createElement("div");
+  caja.className="burbuja";
+  caja.innerHTML=`<i>${esc(boton.textContent)}</i><p>Pensando…</p>`;
+  $("#resp-ia").appendChild(caja);
+  try{
+    const r=await fetch("/api/preguntar",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({...ULTIMA,pregunta_id:boton.dataset.q})});
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.detail||"No se pudo preguntar");
+    if(!d.disponible){ caja.classList.add("sin"); caja.querySelector("p").textContent=d.motivo; }
+    else if(d.descartada){ caja.classList.add("sin");
+      caja.querySelector("p").textContent="Mi respuesta citaba cifras que no calculé, así que la descarté."; }
+    else caja.querySelector("p").textContent=d.respuesta;
+  }catch(e){ caja.classList.add("sin"); caja.querySelector("p").textContent=e.message; boton.disabled=false; }
 }
 
 $("#analizar").onclick = analizar;

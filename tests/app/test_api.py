@@ -75,3 +75,22 @@ def test_onboarding_rechaza_lo_que_no_es_un_export(importadas_en_tmp):
     r = cliente.post("/api/onboarding", content=b"no soy un zip",
                      headers={"Content-Type": "application/zip"})
     assert r.status_code == 400
+
+
+def test_pregunta_desconocida_devuelve_404():
+    r = cliente.post("/api/preguntar", json={"sesion_id": "partido", "pregunta_id": "no_existe"})
+    assert r.status_code == 404
+
+
+def test_pregunta_sin_modelo_ni_cache_no_inventa_respuesta(monkeypatch, tmp_path):
+    from app import llm_cache
+    monkeypatch.setattr(llm_cache, "CACHE_DIR", tmp_path)  # cache vacia
+    r = cliente.post("/api/preguntar", json={"sesion_id": "partido", "pregunta_id": "proximo",
+                                             "nota": "x", "modo": "cache"})
+    assert r.status_code == 200
+    assert r.json()["disponible"] is False
+
+
+def test_el_catalogo_trae_las_preguntas_sugeridas():
+    d = cliente.get("/api/catalogo").json()
+    assert {q["id"] for q in d["preguntas"]} == {"proximo", "cancha", "entreno"}
