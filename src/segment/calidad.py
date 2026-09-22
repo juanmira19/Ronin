@@ -17,6 +17,7 @@ MOTIVO_CONTINUO = "la sesion no muestra patron de arranque-parada"
 MOTIVO_SIN_BLOQUES = "no se detecto ningun bloque de esfuerzo sobre el umbral de FC"
 MOTIVO_HUECOS = "hay tramos de frecuencia cardiaca reconstruidos por interpolacion"
 MOTIVO_SIN_COINCIDENCIA = "los bloques de FC no coinciden con los tramos de velocidad alta"
+MOTIVO_FCMAX_PROVISIONAL = ("la FC maxima del perfil aun se esta calibrando con las primeras sesiones")
 MOTIVO_SIN_VELOCIDAD = "la sesion no trae velocidad utilizable: la segmentacion se apoya solo en FC"
 
 

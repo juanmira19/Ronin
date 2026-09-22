@@ -9,8 +9,10 @@ from pydantic import BaseModel, ConfigDict
 from src.common.contract import AI_JOB, HUMAN_DECISION, PRODUCT_NAME, REQUIRED_FIELDS, SYSTEM_VALIDATIONS, USER
 from src.common.llm import ask_model_json
 from src.metrics.session import calcular_metricas, comparar_historial, divergencia
+from src.perfil.fcmax import resolver_fcmax
 from src.segment.blocks import detectar_bloques
-from src.segment.calidad import calidad_segmentacion, diagnostico_no_intermitente
+from src.segment.calidad import (MOTIVO_FCMAX_PROVISIONAL, calidad_segmentacion,
+                                 diagnostico_no_intermitente)
 from src.verify.validate import cifras_permitidas, validar, verificar_cifras
 
 
@@ -87,30 +89,64 @@ La respuesta será consumida por software.
 '''
 
 
-def run_prototype(real_input: dict) -> dict:
-    fc_max = real_input["perfil"]["fc_max"]
+def _interpretar_con_modelo(payload: dict) -> dict:
+    """Interprete por defecto: llama al modelo. Se aisla en una funcion propia
+    para que la capa de demo (app/) pueda inyectar una version con cache sin
+    duplicar `run_prototype` ni tocar el pipeline deterministico."""
+    return ask_model_json(SYSTEM_PROTOTYPE, payload, model_cls=Interpretacion,
+                          temperature=0.3)
+
+
+def run_prototype(real_input: dict, detalle: dict | None = None,
+                  interpretar=None) -> dict:
+    """`detalle`, si se pasa, se rellena in-place con material de diagnostico
+    (bloques, calidad, cifras intrusas, metricas crudas). El dict devuelto NO
+    cambia: el contrato de ocho campos se mantiene intacto y `contract_check`
+    sigue viendo exactamente los mismos campos que antes.
+
+    `interpretar` permite inyectar otro redactor (por ejemplo uno con cache).
+    Por defecto usa el modelo."""
+    detalle = detalle if detalle is not None else {}
+    interpretar = interpretar or _interpretar_con_modelo
     df = real_input["serie"]
     rpe = real_input["esfuerzo_percibido"]
     historial = real_input.get("historial", [])
 
-    errores = validar(df, rpe, real_input.get("tipo_sesion", "partido"), fc_max)
+    # La FCmax no se pide ni se estima por edad: o la declara el perfil, o se
+    # deriva de lo que el propio jugador ya alcanzo (src/perfil/fcmax.py).
+    perfil_fcmax = resolver_fcmax(real_input["perfil"], df)
+    fc_max = perfil_fcmax["fc_max"]
+    detalle["fcmax"] = perfil_fcmax
+
+    errores = validar(df, rpe, real_input.get("tipo_sesion", "partido"), fc_max,
+                      fc_max_declarada=perfil_fcmax["fuente"] == "declarada")
     if errores:
+        detalle["etapa_fallida"] = "validacion"
         return {"error": errores}
 
     bloques = detectar_bloques(df, fc_max)
     calidad = calidad_segmentacion(df, bloques)
+    if perfil_fcmax["provisional"]:
+        # Con pocas sesiones el umbral se apoya en una FCmax que todavia es un
+        # piso. La segmentacion puede estar bien, pero no se puede afirmar.
+        calidad["confianza"] = "media" if calidad["confianza"] == "alta" else calidad["confianza"]
+        calidad["motivos"].append(MOTIVO_FCMAX_PROVISIONAL)
+    detalle["bloques"] = bloques
+    detalle["calidad"] = calidad
     try:
         metricas = calcular_metricas(df, bloques, fc_max, calidad=calidad)
     except ValueError as e:
         # El error solo decia el sintoma ("menos de 2 bloques"); el diagnostico
         # agrega la causa (sesion continua, senal con huecos, etc).
+        detalle["etapa_fallida"] = "segmentacion"
         return {"error": [str(e), *diagnostico_no_intermitente(df, bloques, calidad)],
                 "diagnostico": calidad}
 
     div_label, rpe_esperado = divergencia(rpe, bloques, df)
+    detalle["metricas"] = metricas
+    detalle["rpe_esperado"] = rpe_esperado
 
-    interp = ask_model_json(
-        SYSTEM_PROTOTYPE,
+    interp = interpretar(
         {"METRICAS": metricas,
          "CALIDAD_SEGMENTACION": calidad,
          "PERFIL": real_input["perfil"],
@@ -118,15 +154,15 @@ def run_prototype(real_input: dict) -> dict:
          "REPORTE_DEL_JUGADOR": {"esfuerzo_percibido": rpe, "nota": real_input["nota"]},
          "DIVERGENCIA_CALCULADA": {"etiqueta": div_label, "rpe_esperado": rpe_esperado},
          "context": {"human_decision": HUMAN_DECISION,
-                     "system_validations": SYSTEM_VALIDATIONS}},
-        model_cls=Interpretacion,
-        temperature=0.3,
-    )
+                     "system_validations": SYSTEM_VALIDATIONS}})
+    detalle["fuente_interpretacion"] = interp.pop("_fuente", "modelo")
 
     # Verificacion: ninguna cifra del texto puede venir de fuera del sistema.
     permitidos = cifras_permitidas(metricas, df, rpe, rpe_esperado, historial)
     texto = interp["lectura_sesion"] + " " + interp["recomendacion_semana"]
     intrusas = verificar_cifras(texto, permitidos)
+    detalle["cifras_intrusas"] = intrusas
+    detalle["texto_descartado"] = bool(intrusas)
     if intrusas:
         print(f"Cifras no calculadas por el sistema: {intrusas} -> texto descartado")
         interp["lectura_sesion"] = "[texto descartado: cito cifras que el sistema no calculo]"
