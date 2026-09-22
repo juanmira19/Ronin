@@ -3,3 +3,6 @@ numpy
 pydantic
 groq
 pytest
+fastapi
+uvicorn
+httpx
