@@ -13,3 +13,6 @@ HealthAutoExport-*.csv
 
 __pycache__/
 *.pyc
+
+# Entorno virtual local
+.venv/
