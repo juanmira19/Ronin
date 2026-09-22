@@ -21,6 +21,8 @@ SYSTEM_VALIDATIONS = [
     "duracion minima, fusion de huecos)",
     "Clasificar cada bloque por intensidad",
     "Calcular degradacion del pico entre mitades y recuperacion via HRR60",
+    "Evaluar la calidad de la segmentacion con la senal de velocidad y emitir "
+    "la alerta de segmentacion dudosa cuando la confianza es baja",
     "Calcular la divergencia entre esfuerzo percibido y carga objetiva",
     "Comparar contra el historial del jugador",
     "Validar la entrada y verificar que el texto del modelo no cite cifras ajenas",
@@ -31,7 +33,8 @@ HUMAN_DECISION = "Si entrena o descansa cuando requiere_revision es true"
 # Los ocho campos del contrato de output. Fijos, no negociables.
 OUTPUT_SCHEMA = {
     "lectura_sesion": "string. Interpretacion en lenguaje del jugador, 2-3 frases, max 400 caracteres",
-    "bloques_esfuerzo": "object. cantidad, duracion_media_seg y distribucion por intensidad",
+    "bloques_esfuerzo": "object. cantidad, duracion_media_seg, distribucion por intensidad "
+                        "y confianza de la segmentacion (alta|media|baja|no_evaluada)",
     "degradacion": "object. pico_pct entre -100 y 100, recuperacion_pct entre -100 y 500",
     "comparacion_historial": "object o null. null si hay menos de 2 sesiones previas del mismo tipo",
     "divergencia_percepcion": "string. alineado | percibio_mas | percibio_menos",

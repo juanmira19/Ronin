@@ -6,7 +6,7 @@ import numpy as np
 from src.segment.blocks import hrr60
 
 
-def calcular_metricas(df, bloques, fc_max):
+def calcular_metricas(df, bloques, fc_max, calidad=None):
     if len(bloques) < 2:
         raise ValueError("Segmentacion insuficiente: menos de 2 bloques detectados")
     mitad = df["t"].iloc[-1] / 2
@@ -32,7 +32,9 @@ def calcular_metricas(df, bloques, fc_max):
     pico_pct, rec_pct = float(pico_pct), float(rec_pct)
     return {"bloques_esfuerzo": {"cantidad": len(bloques),
                                  "duracion_media_seg": int(np.mean([b["duracion_seg"] for b in bloques])),
-                                 "distribucion": dist},
+                                 "distribucion": dist,
+                                 # etiqueta, no cifra: no entra a cifras_permitidas
+                                 "confianza": (calidad or {}).get("confianza", "no_evaluada")},
             "degradacion": {"pico_pct": pico_pct, "recuperacion_pct": rec_pct},
             "duracion_sesion_min": int(df["t"].iloc[-1] / 60),
             # El sistema resuelve el sentido de cada cifra. El modelo no interpreta
