@@ -4,7 +4,7 @@ no cite cifras que el sistema no calculo. Extraido de la celda 16 del notebook
 
 import re
 
-from src.common.constants import SAMPLE_DT
+from src.common.constants import DURACION_MIN_SESION_MIN, SAMPLE_DT
 
 
 def validar(df, rpe, tipo_sesion, fc_max, cobertura_min=0.90, fc_max_declarada=True):
@@ -17,8 +17,8 @@ def validar(df, rpe, tipo_sesion, fc_max, cobertura_min=0.90, fc_max_declarada=T
     cruda. Solo tiene sentido cuando la cifra la declaro una persona."""
     errores = []
     dur = df["t"].iloc[-1] - df["t"].iloc[0]
-    if dur / 60 < 15:
-        errores.append(f"Sesion de {dur/60:.1f} min: minimo 15")
+    if dur / 60 < DURACION_MIN_SESION_MIN:
+        errores.append(f"Sesion de {dur/60:.1f} min: minimo {DURACION_MIN_SESION_MIN}")
     if not (1 <= rpe <= 10):
         errores.append(f"Esfuerzo percibido {rpe} fuera del rango 1-10")
     if fc_max_declarada and df["fc"].max() > fc_max:
