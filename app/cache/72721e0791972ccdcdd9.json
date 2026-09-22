@@ -3,14 +3,8 @@
   "nota": "Me senti fuerte al inicio y me costo recuperar al final.",
   "esfuerzo_percibido": 8,
   "interpretacion": {
-    "lectura_sesion": "Arrancaste la sesión con buena fuerza y mantuviste la intensidad, pero al final te costó recuperar el ritmo. Tené en cuenta que los últimos puntos pueden verse afectados si llegás cargado.",
-    "recomendacion_semana": "Prioriza entrenamientos de resistencia y recuperación en los últimos minutos del juego: intervalos de alta intensidad seguidos de descansos cortos y trabajo de recuperación activa.",
-    "alertas": [
-      {
-        "tipo": "degradacion_alta",
-        "mensaje": "Notaste que la recuperación empeoró hacia el final de la sesión.",
-        "severidad": "atencion"
-      }
-    ]
+    "lectura_sesion": "Dijiste que te costó recuperar al final y tu reloj lo confirma, mostró peor recuperación hacia el cierre. Como cutter, eso suele notarse en llegar tarde al corte final y perder espacio. En el próximo partido, busca iniciar cortes más cortos y recupera posición antes del último punto.",
+    "recomendacion_semana": "Prioriza entrenamientos de velocidad y recuperación: intervalos de sprint y ejercicios de aceleración con descansos activos para mejorar tu capacidad de volver a la intensidad al final del juego.",
+    "alertas": []
   }
 }

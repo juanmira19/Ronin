@@ -82,7 +82,9 @@
   .nota-conf{font-size:13px;color:var(--muted);margin:-14px 0 24px}
 
   /* lectura */
-  .lectura{font-size:20px;line-height:1.5;letter-spacing:-.01em;margin:0 0 6px}
+  .ve{border-left:3px solid var(--accent);padding:4px 0 4px 18px;margin-bottom:28px}
+  .ve .sec{color:var(--accent)}
+  .lectura{font-size:23px;line-height:1.5;letter-spacing:-.01em;margin:0 0 8px}
   .firma{font-size:12px;color:var(--dim);margin:0 0 26px}
   .cargando{color:var(--dim);font-size:16px}
 
@@ -289,14 +291,14 @@ function pintar(d){
     out.push(`<div class="rechazo"><h3>Medí tu partido, pero no pude redactar qué significa</h3>
       <p style="color:var(--muted);margin:0;font-size:14.5px">${esc(d.motivo_sin_interpretacion)}</p></div>`);
   } else {
-    partido();
     const descartado = d.verificacion && d.verificacion.texto_descartado;
-    out.push(`<p class="sec">Lo que significa</p>`);
-    out.push(descartado
-      ? `<p class="lectura">El resumen que escribí citaba cifras que yo no calculé, así que lo descarté. Arriba está lo que sí medí.</p>
-         <p class="firma">Prefiero quedarme corto a darte un número que no salió de tus datos.</p>`
+    out.push(`<div class="ve"><p class="sec">Lo que Ronin ve</p>${descartado
+      ? `<p class="lectura">Lo que escribí citaba cifras que yo no calculé, así que lo descarté. Abajo está lo que sí medí.</p>
+         <p class="firma" style="margin:0">Prefiero quedarme corto a darte un número que no salió de tus datos.</p>`
       : `<p class="lectura">${esc(s.lectura_sesion)}</p>
-         <p class="firma">Escrito por Ronin a partir de lo que midió tu reloj, con cada cifra verificada contra lo medido.</p>`);
+         <p class="firma" style="margin:0">La IA de Ronin cruzó lo que nos contaste con lo que midió tu reloj${
+           d.perfil&&d.perfil.posicion?` y lo llevó a tu juego como ${esc(d.perfil.posicion)}`:""}. Cada cifra, verificada.</p>`}</div>`);
+    partido();
     out.push(`<div class="reco"><h3>Esta semana</h3><p>${esc(s.recomendacion_semana)}</p></div>`);
     (s.alertas||[]).forEach(a=>out.push(
       `<div class="al ${a.severidad}"><b>${esc(a.mensaje)}</b>${
