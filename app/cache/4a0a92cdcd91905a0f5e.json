@@ -1,0 +1,21 @@
+{
+  "clave": "4a0a92cdcd91905a0f5e",
+  "nota": "Sentí un fuerte dolor en el isquio a la mitad de la sesión. Nunca bajó hasta el final",
+  "esfuerzo_percibido": 8,
+  "interpretacion": {
+    "lectura_sesion": "Perdiste intensidad en la segunda mitad y la recuperación empeoró al final. Además, sentiste un fuerte dolor en el isquio que no disminuyó.",
+    "recomendacion_semana": "Enfócate en sesiones de recuperación activa y trabajo de movilidad de isquiotibiales, evitando esfuerzos máximos hasta que el dolor desaparezca.",
+    "alertas": [
+      {
+        "tipo": "molestia_fisica",
+        "mensaje": "Dolor fuerte en el isquio reportado durante la sesión.",
+        "severidad": "alta"
+      },
+      {
+        "tipo": "degradacion_alta",
+        "mensaje": "Pérdida de intensidad en la segunda mitad y recuperación peor hacia el final.",
+        "severidad": "atencion"
+      }
+    ]
+  }
+}

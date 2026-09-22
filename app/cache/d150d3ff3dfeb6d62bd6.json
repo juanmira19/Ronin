@@ -1,0 +1,16 @@
+{
+  "clave": "d150d3ff3dfeb6d62bd6",
+  "nota": "Me senti raro, pero no se si fue cansancio o molestia.",
+  "esfuerzo_percibido": 7,
+  "interpretacion": {
+    "lectura_sesion": "En los 46 minutos de juego tuviste 15 bloques de esfuerzo, mayormente al máximo, y perdiste intensidad en la segunda mitad, con una recuperación que empeoró al final. Sentiste una sensación extraña y no sabes si era cansancio o molestia.",
+    "recomendacion_semana": "Prioriza entrenamientos de intervalos de alta intensidad con recuperación activa para mejorar la constancia de esfuerzo en la segunda mitad, y añade sesiones de movilidad y control de ritmo para evitar sensaciones extrañas.",
+    "alertas": [
+      {
+        "tipo": "molestia_fisica",
+        "mensaje": "El jugador expresó duda sobre si la sensación era cansancio o molestia.",
+        "severidad": "alta"
+      }
+    ]
+  }
+}
