@@ -12,13 +12,17 @@ respuesta 2026-09-01.
 """
 
 import json
+import sys
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))  # permite correr este archivo directo (boton "Run"), no solo con -m
 
 from evals.run_evals import CASES_PATH, HISTORIAL, PERFIL, evaluar_caso
 from src.ingest.health_auto_export import load_session
 from src.interpret.prototype import contract_check, run_prototype
 
-ROOT = Path(__file__).resolve().parent.parent
 RESULTS_PATH = ROOT / "evals" / "results_synthetic_realista.md"
 SAMPLE_PATH = ROOT / "data" / "samples" / "partido_sintetico_2026-09-01.json"
 

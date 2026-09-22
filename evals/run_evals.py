@@ -3,12 +3,16 @@ y actualiza evals/results.md con pass/fail. Requiere GROQ_API_KEY en el entorno
 para los casos que llaman al modelo (todos menos ronin_missing_sensor_data)."""
 
 import json
+import sys
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))  # permite correr este archivo directo (boton "Run"), no solo con -m
 
 from src.ingest.synthetic import generar_sesion
 from src.interpret.prototype import contract_check, run_prototype
 
-ROOT = Path(__file__).resolve().parent.parent
 CASES_PATH = ROOT / "evals" / "eval_cases.json"
 RESULTS_PATH = ROOT / "evals" / "results.md"
 
