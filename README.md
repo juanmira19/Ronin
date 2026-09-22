@@ -47,12 +47,31 @@ La velocidad sí se usa, pero para dos cosas acotadas: corregir el *inicio* de c
 
 **Rendimiento, nunca salud.** Ronin no diagnostica ni da consejo médico. Cuando los umbrales se cruzan, no adivina: marca `requiere_revision` y sugiere descanso.
 
+## Demo
+
+`app/` es una API (FastAPI) sobre el mismo pipeline que corren los evals, más una
+página que lo muestra: el contraste entre lo que promedia el reloj y los bloques
+que detecta Ronin, la serie de FC con los bloques sombreados, el RPE y la nota
+editables en vivo, y los rechazos cuando la sesión no es analizable.
+
+```bash
+pip install -r requirements.txt
+GROQ_API_KEY=... python -m scripts.precalentar_cache   # una vez, con red
+GROQ_API_KEY=... python -m app.server                  # http://127.0.0.1:8000
+RONIN_MODO=cache python -m app.server                  # sin red
+```
+
+La capa determinística no usa red en ningún modo. Si el modelo no responde y no
+hay caché para ese caso, la página muestra las métricas calculadas y dice que no
+hay interpretación, en vez de inventar un texto. Guion de presentación en
+[`docs/demo.md`](docs/demo.md).
+
 ## Estado
 
 Tesis de problema, flujo y contrato de salida definidos. La capa determinística
 (segmentación, calidad, métricas, validación) y la capa de interpretación con IA
-están implementadas en `src/`, con 90 tests unitarios en `tests/` que corren sin
-API key.
+están implementadas en `src/`, con 118 tests unitarios en `tests/` que corren sin
+API key. La demo web (`app/`) expone ese mismo pipeline sin duplicar lógica.
 
 Los 5 casos de `evals/` pasan contra datos sintéticos (`results.md`) y contra un
 partido sintético-realista con forma de export real (`results_synthetic_realista.md`).
@@ -69,6 +88,11 @@ del equipo (ver `src/common/constants.py`), no valores medidos en cancha.
 
 ```
 ronin/
+├── app/             # API FastAPI + pagina de la demo (no contiene logica de producto)
+│   ├── presets.py   # sesiones y notas de la demo (las notas son las de evals/)
+│   ├── analysis.py  # orquesta src/ y arma el payload de la pagina
+│   ├── llm_cache.py # cache de interpretaciones reales, para demo sin red
+│   └── static/      # pagina de una sola pieza (sin dependencias externas)
 ├── data/            # datos de sesiones — NO se versiona (ver .gitignore)
 │   ├── raw/         # exports crudos de Health Auto Export (JSON, v2)
 │   └── samples/     # ejemplos anonimizados para pruebas
@@ -85,6 +109,7 @@ ronin/
 
 Instalar dependencias con `pip install -r requirements.txt`. Desde la raíz del repo:
 
+- Demo web: `python -m app.server` (ver `docs/demo.md`)
 - Tests unitarios (rápidos, sin red ni API key): `python -m pytest tests/`
 - Evals de calidad del modelo: `GROQ_API_KEY=... python -m evals.run_evals`
   (también `run_evals_real` y `run_evals_synthetic_realista`)

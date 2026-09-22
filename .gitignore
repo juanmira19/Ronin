@@ -13,3 +13,12 @@ HealthAutoExport-*.csv
 
 __pycache__/
 *.pyc
+
+# La cache de la demo (app/cache/) SI se versiona: son salidas reales del modelo
+# y permiten correr la demo sin API key ni red.
+
+# capturas que el asistente dejo en la carpeta del proyecto
+Claude outputs/
+
+# configuracion local del asistente
+.claude/
