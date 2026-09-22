@@ -8,15 +8,17 @@ los evals (`src/`). Es la forma de la API que consumiria la app real.
 """
 
 import os
+import tempfile
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from app.analysis import analizar, catalogo
+from app.analysis import analizar, catalogo, importar_export
 from app.presets import SESIONES
 
 STATIC = Path(__file__).resolve().parent / "static"
@@ -44,6 +46,21 @@ def post_analizar(peticion: PeticionAnalisis):
         raise HTTPException(404, f"Sesion desconocida: {peticion.sesion_id}")
     return analizar(peticion.sesion_id, peticion.esfuerzo_percibido,
                     peticion.nota, modo=peticion.modo or MODO_POR_DEFECTO)
+
+
+@app.post("/api/onboarding")
+async def post_onboarding(request: Request):
+    """Recibe el zip de Apple Salud tal cual (cuerpo crudo, sin multipart) y
+    devuelve solo los partidos que encontro. El zip se lee en disco y se borra:
+    lo unico que queda son las series anonimizadas de los partidos."""
+    with tempfile.NamedTemporaryFile(suffix=".zip") as tmp:
+        async for trozo in request.stream():
+            tmp.write(trozo)
+        tmp.flush()
+        try:
+            return await run_in_threadpool(importar_export, tmp.name)
+        except ValueError as exc:
+            raise HTTPException(400, str(exc))
 
 
 @app.get("/")

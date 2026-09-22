@@ -6,9 +6,14 @@ entrada. Las notas predefinidas existen para disparar los guardrails en vivo,
 y son literalmente las de `evals/eval_cases.json` — la demo muestra los mismos
 casos que ya estan evaluados, no unos hechos para la ocasion."""
 
+import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+
+# Partidos que el jugador trajo en el onboarding (zip de Apple Salud). Viven en
+# data/raw/, que no se versiona: son datos reales de FC de una persona.
+IMPORTADAS = ROOT / "data" / "raw" / "importadas"
 
 # Sin `fc_max` a proposito: se deriva de lo que el jugador ya alcanzo
 # (src/perfil/fcmax.py). `fcmax_observadas` son las FC maximas suavizadas de sus
@@ -90,3 +95,42 @@ NOTAS = [
 
 def ruta(sesion: dict) -> Path:
     return ROOT / sesion["archivo"]
+
+
+def _preset_importada(archivo: Path, datos: dict) -> dict:
+    tramos = len(datos.get("tramos") or [])
+    return {
+        "id": archivo.stem,
+        "titulo": "Partido de ultimate",
+        "subtitulo": "sesion REAL - importada de Apple Salud",
+        "fecha": datos["presentacion"]["fecha"],
+        "llegada": (f"el reloj lo guardo en {tramos} partes" if tramos > 1
+                    else "importado de tu historial"),
+        "archivo": str(archivo),  # absoluta: `ruta()` la respeta tal cual
+        "tipo_sesion": "partido",
+        "recorte_seg": None,
+        "esperado": "Partido real: sin GPS, la confianza queda topada en media.",
+        "origen": "real",
+        "duracion_min": round(datos["duracion_seg"] / 60),
+    }
+
+
+def registrar_importada(sesion_id: str, sesion: dict, fecha: str) -> dict:
+    """Guarda un partido del onboarding y lo agrega al catalogo. `fecha` es
+    solo para que el jugador lo reconozca en pantalla; la serie va anonimizada
+    (t relativo, sin identificadores), igual que los samples."""
+    IMPORTADAS.mkdir(parents=True, exist_ok=True)
+    datos = {**sesion, "presentacion": {"fecha": fecha}}
+    archivo = IMPORTADAS / f"{sesion_id}.json"
+    archivo.write_text(json.dumps(datos, ensure_ascii=False), encoding="utf-8")
+    SESIONES[sesion_id] = _preset_importada(archivo, datos)
+    return SESIONES[sesion_id]
+
+
+def _cargar_importadas() -> None:
+    for archivo in sorted(IMPORTADAS.glob("*.json")) if IMPORTADAS.exists() else []:
+        SESIONES[archivo.stem] = _preset_importada(
+            archivo, json.loads(archivo.read_text(encoding="utf-8")))
+
+
+_cargar_importadas()

@@ -85,3 +85,19 @@ def test_comparar_historial_direccion_igual_si_cambio_es_chico():
     metricas = {"degradacion": {"pico_pct": 1.0, "recuperacion_pct": 1.0}}
     resultado = comparar_historial(metricas, historial)
     assert resultado["direccion"] == "igual"
+
+
+def test_por_mitad_cuenta_esfuerzos_y_recuperacion_de_cada_mitad():
+    import pandas as pd
+
+    from src.metrics.session import por_mitad
+
+    t = list(range(0, 1205, 5))
+    # FC plana en 170; tras el bloque de la primera mitad baja a 140
+    fc = [140.0 if 300 < x <= 360 else 170.0 for x in t]
+    df = pd.DataFrame({"t": t, "fc": fc})
+    bloques = [{"inicio_seg": 100, "fin_seg": 300}, {"inicio_seg": 700, "fin_seg": 900}]
+    r = por_mitad(df, bloques)
+    assert r["mitad_seg"] == 600
+    assert r["primera"] == {"esfuerzos": 1, "recuperacion_ppm": 30}
+    assert r["segunda"] == {"esfuerzos": 1, "recuperacion_ppm": 0}

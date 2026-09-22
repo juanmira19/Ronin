@@ -20,6 +20,23 @@
   header h1{margin:0;font-size:19px;letter-spacing:.24em;font-weight:700}
   header span{font-size:12.5px;color:var(--dim)}
 
+  /* onboarding */
+  .onb{background:var(--card);border:1px dashed var(--line);border-radius:14px;padding:14px 16px;margin-bottom:18px}
+  .onb-top{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+  .onb-top b{display:block;font-size:14.5px}
+  .onb-top span{display:block;font-size:12.5px;color:var(--muted)}
+  .subir{flex:0 0 auto;border:1px solid var(--accent);color:var(--txt);border-radius:10px;padding:8px 13px;
+         font-size:13.5px;cursor:pointer}
+  .subir:hover{background:#1c1a38}
+  .onb-msg{margin:12px 0 0;font-size:13.5px;color:var(--muted)}
+  .onb-lista{display:flex;flex-direction:column;gap:7px;margin-top:12px}
+  .partido{background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:10px;
+           padding:9px 12px;cursor:pointer;text-align:left}
+  .partido:hover{border-color:var(--accent)}
+  .partido b{font-size:14px;font-weight:600}
+  .partido span{font-size:12px;color:var(--muted);margin-left:8px}
+  .onb-fuera{margin:10px 0 0;font-size:12px;color:var(--dim)}
+
   /* bandeja */
   .bandeja{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:18px}
   .ses{flex:0 0 auto;background:var(--card);border:1px solid var(--line);color:var(--txt);
@@ -46,8 +63,26 @@
         border-radius:999px;padding:4px 10px;cursor:pointer}
   .chip:hover{border-color:var(--accent);color:var(--txt)}
 
+  .accion{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:13px}
+  .analizar{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:10px 18px;
+            font:inherit;font-size:14.5px;font-weight:600;cursor:pointer}
+  .analizar:disabled{opacity:.55;cursor:default}
+  .aviso{font-size:12.5px;color:var(--warn)}
+  #salida.viejo{opacity:.35}
+
+  /* tu partido */
+  .sec{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;font-weight:600}
+  .grafica{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 12px 10px;margin-bottom:14px}
+  .mitades{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:26px}
+  @media (max-width:560px){.mitades{grid-template-columns:1fr}}
+  .mit{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 15px}
+  .mit h4{margin:0 0 4px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+  .mit p{margin:0 0 6px;font-size:16px;line-height:1.45}
+  .mit span{font-size:12.5px;color:var(--muted)}
+  .nota-conf{font-size:13px;color:var(--muted);margin:-14px 0 24px}
+
   /* lectura */
-  .lectura{font-size:25px;line-height:1.45;letter-spacing:-.01em;margin:0 0 6px}
+  .lectura{font-size:20px;line-height:1.5;letter-spacing:-.01em;margin:0 0 6px}
   .firma{font-size:12px;color:var(--dim);margin:0 0 26px}
   .cargando{color:var(--dim);font-size:16px}
 
@@ -90,6 +125,15 @@
 <div class="wrap">
   <header><h1>RONIN</h1><span id="sub">—</span></header>
 
+  <div class="onb">
+    <div class="onb-top">
+      <div><b>Trae tus partidos de Apple Salud</b>
+        <span>Sube el zip que exporta la app Salud. Solo nos quedamos con tus partidos.</span></div>
+      <label class="subir">Subir export.zip<input type="file" id="zip" accept=".zip" hidden></label>
+    </div>
+    <div id="onb-res"></div>
+  </div>
+
   <div class="bandeja" id="bandeja"></div>
 
   <div class="resp">
@@ -97,9 +141,13 @@
     <div class="ops" id="ops"></div>
     <textarea id="nota" placeholder="¿Algo que contar? (opcional)">Me senti fuerte al inicio y me costo recuperar al final.</textarea>
     <div class="chips" id="chips"></div>
+    <div class="accion">
+      <button class="analizar" id="analizar">Analizar partido</button>
+      <span class="aviso" id="aviso"></span>
+    </div>
   </div>
 
-  <div id="salida"><p class="cargando">Analizando…</p></div>
+  <div id="salida"><p class="cargando">Elige la sesión, cuéntanos cómo te sentiste y pulsa Analizar partido.</p></div>
 </div>
 
 <script>
@@ -112,13 +160,55 @@ async function cargar(){
   $("#bandeja").innerHTML = CAT.sesiones.map(s=>`
     <button class="ses ${s.id===SESION?"on":""}" data-id="${s.id}">
       <b>${esc(s.titulo)}</b><span>${esc(s.fecha||"")} · ${esc(s.llegada||"")}</span></button>`).join("");
-  $("#bandeja").querySelectorAll(".ses").forEach(b=>b.onclick=()=>{SESION=b.dataset.id;
-    $("#bandeja").querySelectorAll(".ses").forEach(x=>x.classList.toggle("on",x===b));analizar();});
+  $("#bandeja").querySelectorAll(".ses").forEach(b=>b.onclick=()=>elegir(b.dataset.id));
   $("#chips").innerHTML = CAT.notas.map(n=>
     `<button class="chip" data-t="${esc(n.texto)}" data-r="${n.rpe}">${esc(n.etiqueta)}</button>`).join("");
   $("#chips").querySelectorAll(".chip").forEach(c=>c.onclick=()=>{
-    $("#nota").value=c.dataset.t; RPE=+c.dataset.r; ops(); analizar();});
+    $("#nota").value=c.dataset.t; RPE=+c.dataset.r; ops(); cambio();});
   ops();
+}
+
+function elegir(id){
+  SESION=id;
+  $("#bandeja").querySelectorAll(".ses").forEach(x=>x.classList.toggle("on",x.dataset.id===id));
+  cambio();
+}
+
+// Nada se analiza hasta que el jugador lo pide: cambiar la sesion, la sensacion
+// o la nota solo marca como vieja la lectura que ya esta en pantalla.
+let ANALIZADO=false;
+function cambio(){
+  if(!ANALIZADO) return;
+  $("#salida").classList.add("viejo");
+  $("#aviso").textContent="Cambiaste tu respuesta. Vuelve a analizar para ver la lectura nueva.";
+}
+
+$("#zip").onchange = async e => {
+  const f=e.target.files[0]; if(!f) return;
+  $("#onb-res").innerHTML=`<p class="onb-msg">Leyendo tu historial. Puede tardar unos segundos.</p>`;
+  try{
+    const r=await fetch("/api/onboarding",{method:"POST",headers:{"Content-Type":"application/zip"},body:f});
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.detail||"No se pudo leer el archivo");
+    pintarOnboarding(d);
+    await cargar();
+    if(d.partidos.length) elegir(d.partidos[0].id);
+  }catch(err){ $("#onb-res").innerHTML=`<p class="onb-msg">${esc(err.message)}</p>`; }
+  finally{ e.target.value=""; }
+};
+
+function pintarOnboarding(d){
+  const n=d.partidos.length, x=d.descartados, fuera=[];
+  x.no_son_partidos && fuera.push(`${x.no_son_partidos} entrenamientos que no son partidos`);
+  x.demasiado_cortos && fuera.push(`${x.demasiado_cortos} de menos de 15 minutos`);
+  x.sin_frecuencia_cardiaca && fuera.push(`${x.sin_frecuencia_cardiaca} sin frecuencia cardiaca`);
+  const lista = fuera.length>1 ? fuera.slice(0,-1).join(", ")+" y "+fuera.at(-1) : (fuera[0]||"");
+  $("#onb-res").innerHTML = `
+    <p class="onb-msg">${n ? `Encontramos ${n} ${n===1?"partido":"partidos"}.` : "No encontramos partidos en este export."}</p>
+    <div class="onb-lista">${d.partidos.map(p=>`<button class="partido" data-id="${esc(p.id)}">
+      <b>${esc(p.fecha)}</b><span>${p.duracion_min} min · ${esc(p.llegada)}</span></button>`).join("")}</div>
+    ${lista ? `<p class="onb-fuera">Dejamos fuera ${esc(lista)}.</p>` : ""}`;
+  $("#onb-res").querySelectorAll(".partido").forEach(b=>b.onclick=()=>elegir(b.dataset.id));
 }
 
 function ops(){
@@ -126,20 +216,26 @@ function ops(){
   $("#ops").innerHTML = CAT.escala.map(o=>
     `<button class="op ${o.id===cerca.id?"on":""}" data-r="${o.rpe}">
        <b>${esc(o.etiqueta)}</b><span>${esc(o.detalle)}</span></button>`).join("");
-  $("#ops").querySelectorAll(".op").forEach(b=>b.onclick=()=>{RPE=+b.dataset.r;ops();analizar();});
+  $("#ops").querySelectorAll(".op").forEach(b=>b.onclick=()=>{RPE=+b.dataset.r;ops();cambio();});
 }
 
 async function analizar(){
+  const boton=$("#analizar");
+  boton.disabled=true; boton.textContent="Analizando…";
+  $("#aviso").textContent="";
+  $("#salida").classList.remove("viejo");
   $("#salida").innerHTML = `<p class="cargando">Analizando tu sesión…</p>`;
   try{
     const r = await fetch("/api/analizar",{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({sesion_id:SESION,esfuerzo_percibido:RPE,nota:$("#nota").value})});
     pintar(await r.json());
+    ANALIZADO=true;
   }catch(e){ $("#salida").innerHTML = `<p class="cargando">No se pudo conectar: ${esc(e.message)}</p>`; }
+  finally{ boton.disabled=false; boton.textContent="Analizar partido"; }
 }
 
-function grafica(g, fcMax){
-  const W=920,H=200,PL=8,PR=8,PT=10,PB=18, dur=g.duracion_seg||1;
+function grafica(g, fcMax, mitad){
+  const W=920,H=210,PL=8,PR=8,PT=24,PB=18, dur=g.duracion_seg||1;
   const fcs=g.fc.filter(v=>!isNaN(v));
   const lo=Math.min(...fcs)-5, hi=Math.max(...fcs)+5;
   const X=t=>PL+(t/dur)*(W-PL-PR), Y=f=>PT+(1-(f-lo)/(hi-lo))*(H-PT-PB);
@@ -152,6 +248,10 @@ function grafica(g, fcMax){
     <line x1="${PL}" y1="${Y(fcMax*0.8)}" x2="${W-PR}" y2="${Y(fcMax*0.8)}" stroke="var(--maximo)"
       stroke-width="1" stroke-dasharray="5 4" opacity=".55"/>
     <polyline points="${li}" fill="none" stroke="#eef2fa" stroke-width="1.5"/>
+    ${mitad ? `<line x1="${X(mitad)}" y1="4" x2="${X(mitad)}" y2="${H-PB}" stroke="var(--muted)"
+      stroke-width="1" stroke-dasharray="3 4"/>
+    <text x="${X(mitad)-8}" y="14" fill="var(--muted)" font-size="12" text-anchor="end">primera mitad</text>
+    <text x="${X(mitad)+8}" y="14" fill="var(--muted)" font-size="12">segunda mitad</text>` : ""}
     <text x="${PL}" y="${H-4}" fill="var(--dim)" font-size="11">inicio</text>
     <text x="${W-PR}" y="${H-4}" fill="var(--dim)" font-size="11" text-anchor="end">${Math.round(dur/60)} min</text>
   </svg>
@@ -167,22 +267,36 @@ function pintar(d){
   $("#sub").textContent = d.sesion.titulo.toLowerCase() + " · " + (d.sesion.fecha||"");
   const out=[], s=d.salida;
 
+  const fcMax=(d.fcmax&&d.fcmax.fc_max)||192;
+  const partido = () => {
+    out.push(`<p class="sec">Tu partido</p>
+      <div class="grafica">${grafica(d.grafica,fcMax,d.partido&&d.partido.mitad_seg)}</div>`);
+    (d.mitades||[]).length && out.push(`<div class="mitades">${d.mitades.map(m=>
+      `<div class="mit"><h4>${esc(m.titulo)}</h4><p>${esc(m.texto)}</p><span>${esc(m.dato)}</span></div>`
+    ).join("")}</div>`);
+    const conf=(d.hallazgos||[])[3];
+    conf && out.push(`<p class="nota-conf">${esc(conf.titulo)}: ${esc(conf.detalle)}.</p>`);
+  };
+
   if(d.estado==="rechazada"){
     out.push(`<div class="rechazo"><h3>Esta sesión no la puedo leer</h3>
       <ul>${s.error.map(e=>`<li>${esc(e)}</li>`).join("")}</ul></div>
       <p class="firma">Prefiero decírtelo a inventarte un análisis que parezca sólido y no lo sea.</p>`);
+    (d.grafica.bloques||[]).length && out.push(`<details><summary>Ver la sesión completa</summary>
+      ${grafica(d.grafica,fcMax)}</details>`);
   } else if(d.estado==="sin_interpretacion"){
-    out.push(`<div class="rechazo"><h3>Medí tu sesión, pero no pude redactarla</h3>
+    partido();
+    out.push(`<div class="rechazo"><h3>Medí tu partido, pero no pude redactar qué significa</h3>
       <p style="color:var(--muted);margin:0;font-size:14.5px">${esc(d.motivo_sin_interpretacion)}</p></div>`);
-    (d.hallazgos||[]).length && out.push(hallazgosHTML(d));
   } else {
+    partido();
     const descartado = d.verificacion && d.verificacion.texto_descartado;
+    out.push(`<p class="sec">Lo que significa</p>`);
     out.push(descartado
-      ? `<p class="lectura">Medí tu sesión, pero el resumen que escribí citaba cifras que yo no calculé, así que lo descarté. Abajo está lo que sí medí.</p>
+      ? `<p class="lectura">El resumen que escribí citaba cifras que yo no calculé, así que lo descarté. Arriba está lo que sí medí.</p>
          <p class="firma">Prefiero quedarme corto a darte un número que no salió de tus datos.</p>`
       : `<p class="lectura">${esc(s.lectura_sesion)}</p>
          <p class="firma">Escrito por Ronin a partir de lo que midió tu reloj, con cada cifra verificada contra lo medido.</p>`);
-    out.push(hallazgosHTML(d));
     out.push(`<div class="reco"><h3>Esta semana</h3><p>${esc(s.recomendacion_semana)}</p></div>`);
     (s.alertas||[]).forEach(a=>out.push(
       `<div class="al ${a.severidad}"><b>${esc(a.mensaje)}</b>${
@@ -192,9 +306,6 @@ function pintar(d){
   out.push(`<div class="reloj"><b>Tu reloj decía: ${esc(d.frase_reloj)}</b>
     Eso es todo lo que tenías antes de Ronin.</div>`);
 
-  if((d.grafica.bloques||[]).length || d.estado!=="rechazada")
-    out.push(`<details><summary>Ver la sesión completa</summary>
-      ${grafica(d.grafica,(d.fcmax&&d.fcmax.fc_max)||192)}</details>`);
   out.push(`<details><summary>Detalle técnico</summary>
     <pre>${esc(JSON.stringify({salida:d.salida,calidad:d.calidad,fcmax:d.fcmax,
       verificacion:d.verificacion,fuente_texto:d.fuente_interpretacion},null,2))}</pre></details>`);
@@ -202,13 +313,9 @@ function pintar(d){
   $("#salida").innerHTML = out.join("");
 }
 
-function hallazgosHTML(d){
-  return `<div class="hallazgos">${(d.hallazgos||[]).map(h=>
-    `<div class="h"><div class="pt"></div><div><b>${esc(h.titulo)}</b><span>${esc(h.detalle)}</span></div></div>`
-  ).join("")}</div>`;
-}
-
-cargar().then(analizar);
+$("#analizar").onclick = analizar;
+$("#nota").oninput = cambio;
+cargar();
 </script>
 </body>
 </html>

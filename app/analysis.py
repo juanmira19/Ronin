@@ -11,12 +11,14 @@ from typing import Callable, Optional
 
 import numpy as np
 
-from app.lenguaje import frase_reloj, hallazgos
+from app.lenguaje import fecha_partido, frase_reloj, hallazgos, mitades
 from app.llm_cache import InterpretacionNoDisponible, interpretar as interpretar_cache
-from app.presets import ESCALA, HISTORIAL, NOTAS, PERFIL, SESIONES, ruta
+from app.presets import ESCALA, HISTORIAL, NOTAS, PERFIL, SESIONES, registrar_importada, ruta
 from src.common.constants import SAMPLE_DT
+from src.ingest.apple_health_xml import onboarding
 from src.ingest.health_auto_export import load_session
 from src.interpret.prototype import contract_check, run_prototype
+from src.metrics.session import por_mitad
 
 MAX_PUNTOS_GRAFICA = 700
 
@@ -129,6 +131,10 @@ def analizar(sesion_id: str, rpe: int, nota: str, modo: str = "auto",
     base["frase_reloj"] = frase_reloj(base["reloj"])
     base["hallazgos"] = (hallazgos(detalle["metricas"], detalle.get("calidad"))
                          if detalle.get("metricas") else [])
+    base["partido"] = (por_mitad(df, detalle["bloques"])
+                       if detalle.get("metricas") and detalle.get("bloques") else None)
+    base["mitades"] = (mitades(detalle["metricas"], base["partido"])
+                       if base["partido"] else [])
     base["fuente_interpretacion"] = detalle.get("fuente_interpretacion")
     base["interpretacion_disponible"] = interpretacion_disponible
     base["motivo_sin_interpretacion"] = motivo_sin_interpretacion
@@ -152,3 +158,15 @@ def analizar(sesion_id: str, rpe: int, nota: str, modo: str = "auto",
 def catalogo() -> dict:
     return {"sesiones": list(SESIONES.values()), "notas": NOTAS,
             "escala": ESCALA, "perfil": PERFIL}
+
+
+def importar_export(path) -> dict:
+    """Onboarding: del zip de Apple Salud, solo los partidos, ya agregados al
+    catalogo. Lo que se dejo fuera se cuenta pero no se lista."""
+    r = onboarding(path)
+    partidos = [registrar_importada(f"real_{x['partido'].inicio:%Y%m%d_%H%M}", x["sesion"],
+                                    fecha_partido(x["partido"].inicio))
+                for x in r["partidos"]]
+    _cargar.cache_clear()  # un reimport puede pisar un archivo ya leido
+    return {"partidos": [{k: v for k, v in p.items() if k != "archivo"} for p in partidos],
+            "descartados": r["descartados"]}

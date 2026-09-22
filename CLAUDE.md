@@ -99,14 +99,18 @@ el sistema la **rechaza correctamente**, sin inventar bloques.
 
 **Hipótesis del equipo, no datos de campo** (marcadas así en
 `src/common/constants.py`): `UMBRAL_MOVIMIENTO_KMH`, `PERCENTIL_VELOZ`,
-`LATENCIA_FC_SEG`, `SOLAPE_MIN_CONFIABLE`, `FRAC_INTERPOLADA_MAX`.
+`LATENCIA_FC_SEG`, `SOLAPE_MIN_CONFIABLE`, `FRAC_INTERPOLADA_MAX`,
+`PAUSA_MAX_ENTRE_TRAMOS_SEG` (sale de una sola sesión real).
 
 **Ningún umbral se ajusta para hacer pasar un eval.** Si un eval falla, o el
 código está mal o el eval está mal; se arregla el que corresponda y se explica.
 
-**Dependencia bloqueante, sin resolver:** el equipo todavía no ha grabado un
-partido real de ultimate o fútbol. El sample `partido_sintetico_2026-09-01.json`
-es un proxy honesto, no un sustituto.
+**Primer partido real, 2026-09-04** (export de Apple Salud de Juan Pablo):
+51 min en dos workouts, sin GPS. El sistema lo lee como intermitente, 13 bloques,
+confianza `media`. Es **una** sesión, sin velocidad GPS: no alcanza para calibrar
+las hipótesis de arriba. `recuperacion_pct` sale en ~101 %, lo que refuerza la
+debilidad 1. El sample `partido_sintetico_2026-09-01.json` sigue siendo el caso
+feliz de la demo. Los datos reales viven en `data/raw/` y no se versionan.
 
 ---
 
@@ -120,10 +124,9 @@ es un proxy honesto, no un sustituto.
 3. **`export.xml` no trae GPS.** Las rutas van en `workout-routes/*.gpx`, en una
    carpeta aparte del zip de Apple Health. Sin ellas no hay señal de velocidad y
    la confianza queda topada en `media`.
-4. **Bug latente en `health_auto_export.py`**: cuando no hay `route_speed`,
-   deriva velocidad con `(dist[i] - dist[i-1]) / dt`, pero `distance_km` viene
-   por incrementos, no acumulada. Debería ser `dist[i] / dt * 3600`. No afecta a
-   los samples actuales (ambos traen GPS).
+4. **Velocidad derivada de distancia no cuenta como señal.** `tiene_velocidad`
+   la descarta por diseño (confianza topada en `media`), aunque la del Watch en
+   `export.xml` viene cada ~3 s. Revisar esa política exige hablarlo.
 
 ---
 
@@ -145,6 +148,14 @@ onboarding** (trae todo el historial de una vez, útil para `comparacion_histori
 y para calibrar la FCmax desde el día uno); Health Auto Export para las sesiones
 nuevas.
 
+**Onboarding (hecho):** el jugador sube el zip una vez y no elige nada.
+`onboarding()` en `src/ingest/apple_health_xml.py` lo lee sin descomprimir, se
+queda **solo con `DiscSports`**, une los workouts del mismo reloj separados por
+menos de `PAUSA_MAX_ENTRE_TRAMOS_SEG` (el reloj corta un partido en partes) y
+descarta lo que dura menos de 15 min. La pantalla lista solo los partidos y
+cuenta lo descartado en una línea. Lo importado queda en `data/raw/importadas/`.
+Falta: Health Auto Export para las sesiones nuevas.
+
 ---
 
 ## Cómo correr
@@ -157,7 +168,7 @@ No uses sintaxis de 3.10+: `X | None` en anotaciones revienta al importar. Usa
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-python -m pytest tests/              # 129 tests, sin red ni API key
+python -m pytest tests/              # 137 tests, sin red ni API key
 python -m app.server                 # demo en http://127.0.0.1:8000
 RONIN_MODO=cache python -m app.server # demo sin red
 python -m scripts.precalentar_cache  # regenera la cache llamando al modelo
@@ -174,8 +185,8 @@ python -m evals.run_evals            # y run_evals_real / run_evals_synthetic_re
 ```
 src/
   common/    constantes, contrato, cliente Groq
-  ingest/    health_auto_export (JSON), apple_health_xml (export.xml),
-             anonymize, synthetic
+  ingest/    health_auto_export (JSON), apple_health_xml (zip/export.xml ->
+             partidos anonimizados), anonymize, synthetic
   segment/   blocks (bloques), velocidad (señal), calidad (confianza)
   metrics/   session (degradación, recuperación, divergencia, historial)
   perfil/    fcmax (FCmax derivada de las sesiones del jugador)
@@ -185,9 +196,10 @@ app/         API FastAPI + página de la demo. NO contiene lógica de producto:
              presets, analysis (orquesta src/), lenguaje (métricas → frases),
              llm_cache (cache de salidas reales), server, static/index.html
 evals/       eval_cases.json (5 casos) + 3 runners con sus results.md
-tests/       129 tests, corren sin red ni API key
+tests/       137 tests, corren sin red ni API key
 docs/        arquitectura.md (diagrama Mermaid), demo.md (guion de 6 min)
-data/samples anonimizados; data/ NO se versiona (ver .gitignore)
+data/        samples/ anonimizados (versionados); raw/ con exports reales e
+             importadas/ NO se versiona (ver .gitignore)
 ```
 
 **`app/` no duplica lógica.** Si tocas `src/segment/blocks.py`, la demo cambia
@@ -211,6 +223,9 @@ Tres sesiones, tres comportamientos:
 - **Corrida continua** (sesión real de Apple Watch) → rechazo en segmentación:
   un solo bloque, se detiene antes de llamar al modelo.
 - **Sesión incompleta** → rechazo en validación: 10 min, mínimo 15.
+
+Además, los partidos que se importan desde el zip (`POST /api/onboarding`)
+aparecen en la bandeja como sesiones reales.
 
 Cuatro notas predefinidas, textuales de `evals/eval_cases.json`, que disparan
 los guardrails en vivo. Verificado: la nota normal no levanta alerta y las
@@ -245,8 +260,8 @@ inventar.
 Makers Fellowship. Repo: `github.com/juanmira19/Ronin`.
 
 Reparto actual: Jacobo lleva el pipeline determinístico, la interpretación, los
-evals y la demo. Juan Pablo lleva la ingesta desde `export.xml`
-(`src/ingest/apple_health_xml.py`, hoy solo metadatos de workouts; falta
-correlacionar `<Record>` de FC y `<WorkoutRoute>` con cada workout).
+evals, la demo y (acordado con Juan Pablo) la ingesta desde `export.xml`: ya
+correlaciona `<Record>` de FC y distancia con cada partido; falta leer las rutas
+`workout-routes/*.gpx`.
 
 Se trabaja por rama y PR a `main`, no push directo.

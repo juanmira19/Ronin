@@ -1,0 +1,26 @@
+{
+  "clave": "cb954761d266b6e9117e",
+  "nota": "Me senti raro, pero no se si fue cansancio o molestia.",
+  "esfuerzo_percibido": 7,
+  "interpretacion": {
+    "lectura_sesion": "Hiciste 13 esfuerzos, mantuviste la intensidad durante toda la sesión, pero al final te costó recuperar el ritmo. Sentiste algo raro y no sabes si era cansancio o una molestia.",
+    "recomendacion_semana": "Enfócate esta semana en entrenamientos de recuperación y resistencia, con intervalos controlados y trabajo de ritmo para mejorar tu capacidad de recuperación al final de los esfuerzos.",
+    "alertas": [
+      {
+        "tipo": "molestia_fisica",
+        "mensaje": "Reportas duda entre cansancio y molestia, revisa y descansa si persiste.",
+        "severidad": "alta"
+      },
+      {
+        "tipo": "degradacion_alta",
+        "mensaje": "Recuperaste peor al final de la sesión, tu ritmo de recuperación disminuyó.",
+        "severidad": "atencion"
+      },
+      {
+        "tipo": "divergencia_percepcion",
+        "mensaje": "Percibiste menos esfuerzo de lo esperado según la carga objetiva.",
+        "severidad": "info"
+      }
+    ]
+  }
+}
