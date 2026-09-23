@@ -1,0 +1,16 @@
+{
+  "clave": "5f424a0eb6094505c4f7",
+  "nota": "Fue un partido suave\n",
+  "esfuerzo_percibido": 3,
+  "interpretacion": {
+    "lectura_sesion": "Dijiste que fue un partido suave; tu reloj lo muestra que mantuviste la intensidad y que la recuperación empeoró al final, así que percibiste menos esfuerzo de lo que realmente demandó. Eso suele notarse en que al final del juego te cuesta seguir corriendo con la misma energía. En el próximo partido, reserva un sprint o corte fuerte para los últimos minutos y usa la pausa entre jugadas para respirar profundo.",
+    "recomendacion_semana": "Enfócate esta semana en entrenar resistencia aeróbica y mejorar la recuperación entre esfuerzos, con intervalos de alta intensidad y trabajo de respiración activa.",
+    "alertas": [
+      {
+        "tipo": "divergencia_percepcion",
+        "mensaje": "Percibiste el partido como más suave de lo que indican tus métricas de intensidad y recuperación.",
+        "severidad": "atencion"
+      }
+    ]
+  }
+}

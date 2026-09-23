@@ -1,0 +1,21 @@
+{
+  "clave": "56da5166df9d8ac796ea",
+  "nota": "Me senti super bien, no me canse nada.",
+  "esfuerzo_percibido": 3,
+  "interpretacion": {
+    "lectura_sesion": "Dijiste que te sentiste super bien y no te cansaste: tu reloj muestra que mantuviste la intensidad pero la recuperación empeoró al final, lo que contradice tu sensación. Como cutter, ese patrón suele hacer que llegues tarde a los cortes finales cuando la recuperación decae. En el próximo partido, reserva un sprint corto al final del último cuarto para acelerar tu recuperación y estar listo para los cortes decisivos.",
+    "recomendacion_semana": "Enfócate esta semana en entrenamientos de alta intensidad con intervalos cortos y trabajo de recuperación activa para mejorar la capacidad de volver a la intensidad al final del juego.",
+    "alertas": [
+      {
+        "tipo": "divergencia_percepcion",
+        "mensaje": "Tu percepción de esfuerzo es menor a la carga objetiva medida.",
+        "severidad": "atencion"
+      },
+      {
+        "tipo": "degradacion_alta",
+        "mensaje": "La recuperación al final de la sesión fue peor de lo esperado.",
+        "severidad": "atencion"
+      }
+    ]
+  }
+}

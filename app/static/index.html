@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%237c5cff%27/%3E%3Cpath d=%27M5 22 L11 22 L11 12 L16 12 L16 22 L21 22 L21 9 L27 9%27 fill=%27none%27 stroke=%27white%27 stroke-width=%273%27/%3E%3C/svg%3E">
+<title>Ronin</title>
+<style>
+  :root{
+    --bg:#07090f; --card:#111827; --card2:#161f33; --line:#242f49;
+    --txt:#eef2fa; --muted:#93a1bd; --dim:#5f6e8c;
+    --bajo:#38bdf8; --moderado:#fbbf24; --maximo:#f43f5e;
+    --ok:#34d399; --warn:#fbbf24; --bad:#f43f5e; --accent:#7c5cff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+       font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif}
+  .wrap{max-width:720px;margin:0 auto;padding:22px 20px 60px}
+  header{display:flex;align-items:baseline;gap:12px;margin-bottom:22px}
+  header h1{margin:0;font-size:19px;letter-spacing:.24em;font-weight:700}
+  header span{font-size:12.5px;color:var(--dim)}
+
+  /* onboarding */
+  .onb{background:var(--card);border:1px dashed var(--line);border-radius:14px;padding:14px 16px;margin-bottom:18px}
+  .onb-top{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+  .onb-top b{display:block;font-size:14.5px}
+  .onb-top span{display:block;font-size:12.5px;color:var(--muted)}
+  .subir{flex:0 0 auto;border:1px solid var(--accent);color:var(--txt);border-radius:10px;padding:8px 13px;
+         font-size:13.5px;cursor:pointer}
+  .subir:hover{background:#1c1a38}
+  .onb-msg{margin:12px 0 0;font-size:13.5px;color:var(--muted)}
+  .onb-lista{display:flex;flex-direction:column;gap:7px;margin-top:12px}
+  .partido{background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:10px;
+           padding:9px 12px;cursor:pointer;text-align:left}
+  .partido:hover{border-color:var(--accent)}
+  .partido b{font-size:14px;font-weight:600}
+  .partido span{font-size:12px;color:var(--muted);margin-left:8px}
+  .onb-fuera{margin:10px 0 0;font-size:12px;color:var(--dim)}
+
+  /* bandeja */
+  .bandeja{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:18px}
+  .ses{flex:0 0 auto;background:var(--card);border:1px solid var(--line);color:var(--txt);
+       border-radius:11px;padding:9px 13px;cursor:pointer;text-align:left;transition:.15s}
+  .ses:hover{border-color:var(--accent)}
+  .ses.on{border-color:var(--accent);background:#1c1a38}
+  .ses b{display:block;font-size:13.5px;font-weight:600}
+  .ses span{display:block;font-size:11px;color:var(--dim);margin-top:1px}
+
+  /* tu respuesta */
+  .resp{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px 16px;margin-bottom:22px}
+  .resp h2{margin:0 0 11px;font-size:13.5px;color:var(--muted);font-weight:600}
+  .ops{display:flex;gap:7px;flex-wrap:wrap}
+  .op{flex:1 1 0;min-width:88px;background:var(--card2);border:1px solid var(--line);color:var(--txt);
+      border-radius:10px;padding:9px 6px;cursor:pointer;text-align:center;transition:.15s}
+  .op:hover{border-color:var(--accent)}
+  .op.on{border-color:var(--accent);background:#221f42}
+  .op b{display:block;font-size:14px}
+  .op span{display:block;font-size:10.5px;color:var(--muted);margin-top:1px}
+  textarea{width:100%;min-height:54px;resize:vertical;background:var(--card2);color:var(--txt);
+           border:1px solid var(--line);border-radius:10px;padding:9px 11px;font:inherit;font-size:14px;margin-top:11px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+  .chip{font-size:11.5px;border:1px solid var(--line);background:transparent;color:var(--dim);
+        border-radius:999px;padding:4px 10px;cursor:pointer}
+  .chip:hover{border-color:var(--accent);color:var(--txt)}
+
+  .accion{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:13px}
+  .analizar{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:10px 18px;
+            font:inherit;font-size:14.5px;font-weight:600;cursor:pointer}
+  .analizar:disabled{opacity:.55;cursor:default}
+  .aviso{font-size:12.5px;color:var(--warn)}
+  #salida.viejo{opacity:.35}
+
+  /* tu partido */
+  .sec{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;font-weight:600}
+  .grafica{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 12px 10px;margin-bottom:14px}
+  .mitades{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:26px}
+  @media (max-width:560px){.mitades{grid-template-columns:1fr}}
+  .mit{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 15px}
+  .mit h4{margin:0 0 4px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+  .mit p{margin:0 0 6px;font-size:16px;line-height:1.45}
+  .mit span{font-size:12.5px;color:var(--muted)}
+  .nota-conf{font-size:13px;color:var(--muted);margin:-14px 0 24px}
+
+  /* preguntas */
+  .preg{margin:-12px 0 28px}
+  .preg-ops{display:flex;flex-wrap:wrap;gap:7px}
+  .pq{background:transparent;border:1px solid var(--accent);color:var(--txt);border-radius:999px;
+      padding:6px 13px;font:inherit;font-size:13px;cursor:pointer}
+  .pq:hover{background:#1c1a38}
+  .pq:disabled{opacity:.4;cursor:default}
+  .resp-ia{margin-top:10px}
+  .burbuja{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 14px;margin-top:8px}
+  .burbuja i{display:block;font-style:normal;font-size:12px;color:var(--accent);margin-bottom:3px}
+  .burbuja p{margin:0;font-size:15.5px;line-height:1.5}
+  .burbuja.sin p{color:var(--muted);font-size:14px}
+
+  /* lectura */
+  .ve{border-left:3px solid var(--accent);padding:4px 0 4px 18px;margin-bottom:28px}
+  .ve .sec{color:var(--accent)}
+  .lectura{font-size:23px;line-height:1.5;letter-spacing:-.01em;margin:0 0 8px}
+  .firma{font-size:12px;color:var(--dim);margin:0 0 26px}
+  .cargando{color:var(--dim);font-size:16px}
+
+  .hallazgos{border-top:1px solid var(--line);margin-bottom:26px}
+  .h{display:flex;gap:13px;align-items:flex-start;padding:13px 0;border-bottom:1px solid var(--line)}
+  .h .pt{flex:0 0 7px;height:7px;border-radius:50%;background:var(--accent);margin-top:9px}
+  .h b{display:block;font-size:17px;font-weight:600;line-height:1.35}
+  .h span{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+
+  .reco{background:var(--card);border:1px solid var(--accent);border-radius:14px;padding:16px 18px;margin-bottom:18px}
+  .reco h3{margin:0 0 5px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+  .reco p{margin:0;font-size:16.5px;line-height:1.5}
+
+  .al{border-radius:12px;padding:13px 15px;margin-bottom:10px;font-size:15px;border:1px solid var(--line);background:var(--card)}
+  .al.alta{border-color:#6b2230;background:#220d12}
+  .al.atencion{border-color:#6b5520}
+  .al b{display:block;margin-bottom:2px}
+  .al i{font-style:normal;font-size:12.5px;color:var(--muted)}
+
+  .reloj{border-left:2px solid var(--line);padding:2px 0 2px 14px;margin:24px 0;font-size:14px;color:var(--muted)}
+  .reloj b{color:var(--txt);font-weight:600;display:block;font-size:15px}
+
+  details{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+  summary{cursor:pointer;color:var(--muted);font-size:13.5px;list-style:none}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"▸ ";color:var(--dim)}
+  details[open] summary::before{content:"▾ "}
+  pre{background:#04060c;border:1px solid var(--line);border-radius:10px;padding:13px;overflow:auto;
+      font-size:11.5px;color:#9fb3d9;max-height:320px}
+  .leyenda{display:flex;gap:15px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:8px}
+  .sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+
+  .rechazo{background:var(--card);border:1px solid var(--bad);border-radius:14px;padding:18px 20px;margin-bottom:20px}
+  .rechazo h3{margin:0 0 10px;font-size:19px;color:var(--bad)}
+  .rechazo ul{margin:0;padding-left:20px;color:var(--muted);font-size:14.5px}
+  .rechazo li{margin-bottom:5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><h1>RONIN</h1><span id="sub">—</span></header>
+
+  <div class="onb">
+    <div class="onb-top">
+      <div><b>Trae tus partidos de Apple Salud</b>
+        <span>Sube el zip que exporta la app Salud. Solo nos quedamos con tus partidos.</span></div>
+      <label class="subir">Subir export.zip<input type="file" id="zip" accept=".zip" hidden></label>
+    </div>
+    <div id="onb-res"></div>
+  </div>
+
+  <div class="bandeja" id="bandeja"></div>
+
+  <div class="resp">
+    <h2>¿Cómo te sentiste?</h2>
+    <div class="ops" id="ops"></div>
+    <textarea id="nota" placeholder="¿Algo que contar? (opcional)">Me senti fuerte al inicio y me costo recuperar al final.</textarea>
+    <div class="chips" id="chips"></div>
+    <div class="accion">
+      <button class="analizar" id="analizar">Analizar partido</button>
+      <span class="aviso" id="aviso"></span>
+    </div>
+  </div>
+
+  <div id="salida"><p class="cargando">Elige la sesión, cuéntanos cómo te sentiste y pulsa Analizar partido.</p></div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+let CAT=null, SESION="partido", RPE=8;
+const esc = s => String(s??"").replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+
+async function cargar(){
+  CAT = await (await fetch("/api/catalogo")).json();
+  $("#bandeja").innerHTML = CAT.sesiones.map(s=>`
+    <button class="ses ${s.id===SESION?"on":""}" data-id="${s.id}">
+      <b>${esc(s.titulo)}</b><span>${esc(s.fecha||"")} · ${esc(s.llegada||"")}</span></button>`).join("");
+  $("#bandeja").querySelectorAll(".ses").forEach(b=>b.onclick=()=>elegir(b.dataset.id));
+  $("#chips").innerHTML = CAT.notas.map(n=>
+    `<button class="chip" data-t="${esc(n.texto)}" data-r="${n.rpe}">${esc(n.etiqueta)}</button>`).join("");
+  $("#chips").querySelectorAll(".chip").forEach(c=>c.onclick=()=>{
+    $("#nota").value=c.dataset.t; RPE=+c.dataset.r; ops(); cambio();});
+  ops();
+}
+
+function elegir(id){
+  SESION=id;
+  $("#bandeja").querySelectorAll(".ses").forEach(x=>x.classList.toggle("on",x.dataset.id===id));
+  cambio();
+}
+
+// Nada se analiza hasta que el jugador lo pide: cambiar la sesion, la sensacion
+// o la nota solo marca como vieja la lectura que ya esta en pantalla.
+let ANALIZADO=false, ULTIMA=null;
+function cambio(){
+  if(!ANALIZADO) return;
+  $("#salida").classList.add("viejo");
+  $("#aviso").textContent="Cambiaste tu respuesta. Vuelve a analizar para ver la lectura nueva.";
+}
+
+$("#zip").onchange = async e => {
+  const f=e.target.files[0]; if(!f) return;
+  $("#onb-res").innerHTML=`<p class="onb-msg">Leyendo tu historial. Puede tardar unos segundos.</p>`;
+  try{
+    const r=await fetch("/api/onboarding",{method:"POST",headers:{"Content-Type":"application/zip"},body:f});
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.detail||"No se pudo leer el archivo");
+    pintarOnboarding(d);
+    await cargar();
+    if(d.partidos.length) elegir(d.partidos[0].id);
+  }catch(err){ $("#onb-res").innerHTML=`<p class="onb-msg">${esc(err.message)}</p>`; }
+  finally{ e.target.value=""; }
+};
+
+function pintarOnboarding(d){
+  const n=d.partidos.length, x=d.descartados, fuera=[];
+  x.no_son_partidos && fuera.push(`${x.no_son_partidos} entrenamientos que no son partidos`);
+  x.demasiado_cortos && fuera.push(`${x.demasiado_cortos} de menos de 15 minutos`);
+  x.sin_frecuencia_cardiaca && fuera.push(`${x.sin_frecuencia_cardiaca} sin frecuencia cardiaca`);
+  const lista = fuera.length>1 ? fuera.slice(0,-1).join(", ")+" y "+fuera.at(-1) : (fuera[0]||"");
+  $("#onb-res").innerHTML = `
+    <p class="onb-msg">${n ? `Encontramos ${n} ${n===1?"partido":"partidos"}.` : "No encontramos partidos en este export."}</p>
+    <div class="onb-lista">${d.partidos.map(p=>`<button class="partido" data-id="${esc(p.id)}">
+      <b>${esc(p.fecha)}</b><span>${p.duracion_min} min · ${esc(p.llegada)}</span></button>`).join("")}</div>
+    ${lista ? `<p class="onb-fuera">Dejamos fuera ${esc(lista)}.</p>` : ""}`;
+  $("#onb-res").querySelectorAll(".partido").forEach(b=>b.onclick=()=>elegir(b.dataset.id));
+}
+
+function ops(){
+  const cerca = CAT.escala.reduce((a,b)=>Math.abs(b.rpe-RPE)<Math.abs(a.rpe-RPE)?b:a);
+  $("#ops").innerHTML = CAT.escala.map(o=>
+    `<button class="op ${o.id===cerca.id?"on":""}" data-r="${o.rpe}">
+       <b>${esc(o.etiqueta)}</b><span>${esc(o.detalle)}</span></button>`).join("");
+  $("#ops").querySelectorAll(".op").forEach(b=>b.onclick=()=>{RPE=+b.dataset.r;ops();cambio();});
+}
+
+async function analizar(){
+  const boton=$("#analizar");
+  boton.disabled=true; boton.textContent="Analizando…";
+  $("#aviso").textContent="";
+  $("#salida").classList.remove("viejo");
+  $("#salida").innerHTML = `<p class="cargando">Analizando tu sesión…</p>`;
+  try{
+    // Las preguntas se hacen sobre ESTA lectura, aunque despues cambie la seleccion.
+    ULTIMA = {sesion_id:SESION,esfuerzo_percibido:RPE,nota:$("#nota").value};
+    const r = await fetch("/api/analizar",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(ULTIMA)});
+    pintar(await r.json());
+    ANALIZADO=true;
+  }catch(e){ $("#salida").innerHTML = `<p class="cargando">No se pudo conectar: ${esc(e.message)}</p>`; }
+  finally{ boton.disabled=false; boton.textContent="Analizar partido"; }
+}
+
+function grafica(g, fcMax, mitad){
+  const W=920,H=210,PL=8,PR=8,PT=24,PB=18, dur=g.duracion_seg||1;
+  const fcs=g.fc.filter(v=>!isNaN(v));
+  const lo=Math.min(...fcs)-5, hi=Math.max(...fcs)+5;
+  const X=t=>PL+(t/dur)*(W-PL-PR), Y=f=>PT+(1-(f-lo)/(hi-lo))*(H-PT-PB);
+  const col={bajo:"var(--bajo)",moderado:"var(--moderado)",maximo:"var(--maximo)"};
+  const blo=(g.bloques||[]).map(b=>`<rect x="${X(b.inicio_seg).toFixed(1)}" y="${PT}"
+      width="${Math.max(1.5,X(b.fin_seg)-X(b.inicio_seg)).toFixed(1)}" height="${H-PT-PB}"
+      fill="${col[b.intensidad]}" opacity=".18"></rect>`).join("");
+  const li=g.t.map((t,i)=>`${X(t).toFixed(1)},${Y(g.fc[i]).toFixed(1)}`).join(" ");
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block">${blo}
+    <line x1="${PL}" y1="${Y(fcMax*0.8)}" x2="${W-PR}" y2="${Y(fcMax*0.8)}" stroke="var(--maximo)"
+      stroke-width="1" stroke-dasharray="5 4" opacity=".55"/>
+    <polyline points="${li}" fill="none" stroke="#eef2fa" stroke-width="1.5"/>
+    ${mitad ? `<line x1="${X(mitad)}" y1="4" x2="${X(mitad)}" y2="${H-PB}" stroke="var(--muted)"
+      stroke-width="1" stroke-dasharray="3 4"/>
+    <text x="${X(mitad)-8}" y="14" fill="var(--muted)" font-size="12" text-anchor="end">primera mitad</text>
+    <text x="${X(mitad)+8}" y="14" fill="var(--muted)" font-size="12">segunda mitad</text>` : ""}
+    <text x="${PL}" y="${H-4}" fill="var(--dim)" font-size="11">inicio</text>
+    <text x="${W-PR}" y="${H-4}" fill="var(--dim)" font-size="11" text-anchor="end">${Math.round(dur/60)} min</text>
+  </svg>
+  <div class="leyenda">
+    <span><i class="sw" style="background:var(--bajo)"></i>esfuerzo bajo</span>
+    <span><i class="sw" style="background:var(--moderado)"></i>moderado</span>
+    <span><i class="sw" style="background:var(--maximo)"></i>máximo</span>
+    <span>cada franja es un esfuerzo detectado</span>
+  </div>`;
+}
+
+function pintar(d){
+  $("#sub").textContent = d.sesion.titulo.toLowerCase() + " · " + (d.sesion.fecha||"");
+  const out=[], s=d.salida;
+
+  const fcMax=(d.fcmax&&d.fcmax.fc_max)||192;
+  const partido = () => {
+    out.push(`<p class="sec">Tu partido</p>
+      <div class="grafica">${grafica(d.grafica,fcMax,d.partido&&d.partido.mitad_seg)}</div>`);
+    (d.mitades||[]).length && out.push(`<div class="mitades">${d.mitades.map(m=>
+      `<div class="mit"><h4>${esc(m.titulo)}</h4><p>${esc(m.texto)}</p><span>${esc(m.dato)}</span></div>`
+    ).join("")}</div>`);
+    const conf=(d.hallazgos||[])[3];
+    conf && out.push(`<p class="nota-conf">${esc(conf.titulo)}: ${esc(conf.detalle)}.</p>`);
+  };
+
+  if(d.estado==="rechazada"){
+    out.push(`<div class="rechazo"><h3>Esta sesión no la puedo leer</h3>
+      <ul>${s.error.map(e=>`<li>${esc(e)}</li>`).join("")}</ul></div>
+      <p class="firma">Prefiero decírtelo a inventarte un análisis que parezca sólido y no lo sea.</p>`);
+    (d.grafica.bloques||[]).length && out.push(`<details><summary>Ver la sesión completa</summary>
+      ${grafica(d.grafica,fcMax)}</details>`);
+  } else if(d.estado==="sin_interpretacion"){
+    partido();
+    out.push(`<div class="rechazo"><h3>Medí tu partido, pero no pude redactar qué significa</h3>
+      <p style="color:var(--muted);margin:0;font-size:14.5px">${esc(d.motivo_sin_interpretacion)}</p></div>`);
+  } else {
+    const descartado = d.verificacion && d.verificacion.texto_descartado;
+    out.push(`<div class="ve"><p class="sec">Lo que Ronin ve</p>${descartado
+      ? `<p class="lectura">Lo que escribí citaba cifras que yo no calculé, así que lo descarté. Abajo está lo que sí medí.</p>
+         <p class="firma" style="margin:0">Prefiero quedarme corto a darte un número que no salió de tus datos.</p>`
+      : `<p class="lectura">${esc(s.lectura_sesion)}</p>
+         <p class="firma" style="margin:0">La IA de Ronin cruzó lo que nos contaste con lo que midió tu reloj. Cada cifra, verificada.</p>`}</div>`);
+    descartado || out.push(`<div class="preg"><p class="sec">Pregúntale a Ronin</p>
+      <div class="preg-ops">${(CAT.preguntas||[]).map(q=>
+        `<button class="pq" data-q="${esc(q.id)}">${esc(q.texto)}</button>`).join("")}</div>
+      <div class="resp-ia" id="resp-ia"></div></div>`);
+    partido();
+    out.push(`<div class="reco"><h3>Esta semana</h3><p>${esc(s.recomendacion_semana)}</p></div>`);
+    (s.alertas||[]).forEach(a=>out.push(
+      `<div class="al ${a.severidad}"><b>${esc(a.mensaje)}</b>${
+        a.severidad==="alta"?`<i>Vale la pena que alguien mire esto contigo antes de volver a jugar.</i>`:""}</div>`));
+  }
+
+  out.push(`<div class="reloj"><b>Tu reloj decía: ${esc(d.frase_reloj)}</b>
+    Eso es todo lo que tenías antes de Ronin.</div>`);
+
+  out.push(`<details><summary>Detalle técnico</summary>
+    <pre>${esc(JSON.stringify({salida:d.salida,calidad:d.calidad,fcmax:d.fcmax,
+      verificacion:d.verificacion,fuente_texto:d.fuente_interpretacion},null,2))}</pre></details>`);
+
+  $("#salida").innerHTML = out.join("");
+  document.querySelectorAll(".pq").forEach(b=>b.onclick=()=>preguntar(b));
+}
+
+async function preguntar(boton){
+  boton.disabled=true;
+  const caja=document.createElement("div");
+  caja.className="burbuja";
+  caja.innerHTML=`<i>${esc(boton.textContent)}</i><p>Pensando…</p>`;
+  $("#resp-ia").appendChild(caja);
+  try{
+    const r=await fetch("/api/preguntar",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({...ULTIMA,pregunta_id:boton.dataset.q})});
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.detail||"No se pudo preguntar");
+    if(!d.disponible){ caja.classList.add("sin"); caja.querySelector("p").textContent=d.motivo; }
+    else if(d.descartada){ caja.classList.add("sin");
+      caja.querySelector("p").textContent="Mi respuesta citaba cifras que no calculé, así que la descarté."; }
+    else caja.querySelector("p").textContent=d.respuesta;
+  }catch(e){ caja.classList.add("sin"); caja.querySelector("p").textContent=e.message; boton.disabled=false; }
+}
+
+$("#analizar").onclick = analizar;
+$("#nota").oninput = cambio;
+cargar();
+</script>
+</body>
+</html>

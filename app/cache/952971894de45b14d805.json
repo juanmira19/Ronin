@@ -1,0 +1,16 @@
+{
+  "clave": "952971894de45b14d805",
+  "nota": "Senti dolor fuerte en la rodilla desde la mitad del partido.",
+  "esfuerzo_percibido": 9,
+  "interpretacion": {
+    "lectura_sesion": "Durante la sesión tuviste 15 bloques de esfuerzo, con la mayoría (10) en intensidad máxima. La intensidad decayó en la segunda mitad y la recuperación fue peor al final, coincidiendo con el dolor fuerte que sentiste en la rodilla desde la mitad del partido.",
+    "recomendacion_semana": "Esta semana prioriza trabajo de recuperación y fortalecimiento de la rodilla: sesiones de bajo a moderado esfuerzo, ejercicios de movilidad y fuerza específica, y fisioterapia o auto‑masaje. Evita entrenamientos de alta intensidad hasta que el dolor desaparezca.",
+    "alertas": [
+      {
+        "tipo": "molestia_fisica",
+        "mensaje": "Dolor fuerte en la rodilla reportado desde la mitad del partido.",
+        "severidad": "alta"
+      }
+    ]
+  }
+}
